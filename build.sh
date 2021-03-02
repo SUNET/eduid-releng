@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+set -x
+
+BUILD=$(date +%s)
+
+source ${VENV}/bin/activate
+
+if [ ! -d "${SOURCES}" ]; then
+    echo "$0: SOURCES not set"
+    exit 1
+fi
+
+cd "${SOURCES}"
+
+for repo in *; do
+    pushd "${repo}"
+
+    git status
+    git show --summary
+    ls -l
+
+    sed -ie "s/^version =.*/version = '${BUILD}'/g" setup.py
+
+    sed -ie "s/^\\(eduid-.*\\)==.* /\\1==${BUILD} /g" requirements.txt
+    sed -ie "s/^\\(eduid-.*\\)==.* /\\1==${BUILD} /g" test_requirements.txt
+
+    rm -rf build dist
+    python setup.py bdist_wheel
+
+    popd
+done
+
+
