@@ -1,0 +1,18 @@
+[submodule "repos/eduid-am"]
+	path = repos/eduid-am
+	url = https://github.com/SUNET/eduid-am.git
+[submodule "repos/eduid-common"]
+	path = repos/eduid-common
+	url = https://github.com/SUNET/eduid-common.git
+[submodule "repos/eduid-lookup-mobile"]
+	path = repos/eduid-lookup-mobile
+	url = https://github.com/SUNET/eduid-lookup-mobile.git
+[submodule "repos/eduid_msg"]
+	path = repos/eduid_msg
+	url = https://github.com/SUNET/eduid_msg.git
+[submodule "repos/eduid-userdb"]
+	path = repos/eduid-userdb
+	url = https://github.com/SUNET/eduid-userdb.git
+[submodule "repos/eduid-webapp"]
+	path = repos/eduid-webapp
+	url = https://github.com/SUNET/eduid-webapp.git
