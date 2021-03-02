@@ -16,3 +16,12 @@
 [submodule "repos/eduid-webapp"]
 	path = repos/eduid-webapp
 	url = https://github.com/SUNET/eduid-webapp.git
+[submodule "repos/eduid-graphdb"]
+	path = repos/eduid-graphdb
+	url = https://github.com/SUNET/eduid-graphdb.git
+[submodule "repos/eduid-queue"]
+	path = repos/eduid-queue
+	url = https://github.com/SUNET/eduid-queue.git
+[submodule "repos/eduid-scimapi"]
+	path = repos/eduid-scimapi
+	url = https://github.com/SUNET/eduid-scimapi.git

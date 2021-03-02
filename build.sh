@@ -23,8 +23,9 @@ for repo in *; do
 
     sed -ie "s/^version =.*/version = '${BUILD}'/g" setup.py
 
-    sed -ie "s/^\\(eduid-.*\\)==.* /\\1==${BUILD} /g" requirements.txt
-    sed -ie "s/^\\(eduid-.*\\)==.* /\\1==${BUILD} /g" test_requirements.txt
+    for file in *irements.txt; do
+	sed -ie "s/^\\(eduid-.*\\)==.* /\\1==${BUILD} /g" "${file}"
+    done
 
     rm -rf build dist
     python setup.py bdist_wheel
