@@ -14,17 +14,22 @@ COPY . /build/
 
 WORKDIR /build
 RUN (git describe; git log -n 1) > /build/revision.txt
-RUN make all
+
+RUN VENV=/opt/eduid/webapp make webapp
+
+#RUN python3 -mvenv /build/eduid-webapp
+#RUN /build/eduid-webapp/bin/pip install --extra-index-url file:///build/wheels/simple eduid-webapp
+#RUN /opt/eduid/webapp/bin/pip install --extra-index-url file:///build/wheels/simple eduid-webapp
+#RUN /opt/eduid/webapp/bin/pip install -vvv --index-url file:///build/wheels/simple --extra-index-url https://pypi.sunet.se/simple eduid-webapp
+
+
 
 FROM docker.sunet.se/eduid/python3env
 ARG VERSION
-COPY --from=build /build/wheels/ /build/wheels
-
-RUN find /build -ls
 
 RUN mkdir -p /opt/eduid
 
-RUN python3 -mvenv /opt/eduid/webapp
-RUN /opt/eduid/webapp/bin/pip install --extra-index-url file:///build/wheels/simple eduid-webapp
+COPY --from=build /build/wheels/ /build/wheels
+COPY --from=build /opt/eduid/webapp /opt/eduid/webapp
 
 ENTRYPOINT ["/bin/bash"]

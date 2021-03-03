@@ -2,7 +2,7 @@ REPOS=		${CURDIR}/repos
 SOURCES=	${CURDIR}/sources
 WHEELS=		${CURDIR}/wheels
 INDEX=		$(WHEELS)/simple
-VENV=		"${HOME}/.virtualenvs/eduid-releng"
+VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 BRANCH=		ft-piptools_requirements
 SUBMODULES=	eduid-am eduid-common eduid-graphdb eduid-lookup-mobile eduid_msg eduid-userdb eduid-queue eduid-scimapi eduid-webapp
 
@@ -39,14 +39,15 @@ build: clean update
 	VENV=$(VENV) SOURCES=$(SOURCES) ./build.sh
 
 wheels: build
-	cp -ia sources/*/dist/*whl $(WHEELS)
+	cp -ia $(SOURCES)/*/dist/*whl $(WHEELS)
 	$(VENV)/bin/piprepo build $(WHEELS)
 
-install: wheels
+webapp: venv wheels
+	find $(WHEELS) -ls
 	$(VENV)/bin/pip install --extra-index-url "file://$(INDEX)" eduid-webapp
 
-	echo "eduID packages installed:"
+	echo "Python packages installed for webapp:"
 	echo ""
-	pip freeze | grep ^eduid
+	$(VENV)/bin/pip freeze
 
-all: venv install
+all: venv wheels
