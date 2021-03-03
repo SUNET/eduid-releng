@@ -32,6 +32,12 @@ init_submodules:
 	git submodule foreach 'git remote remove local || true'
 	cd "${REPOS}" && git submodule foreach 'git remote add -f local $(LOCAL_SOURCES)/$$displaypath'
 
+venv:
+	python3 -mvenv $(VENV)
+	$(VENV)/bin/pip install wheel pip-tools piprepo
+	$(VENV)/bin/pip install --extra-index https://pypi.sunet.se/simple pysmscom vccs-client
+
+
 real_clean: clean init_submodules
 
 build: clean update
@@ -48,4 +54,4 @@ install: wheels
 	echo ""
 	pip freeze | grep ^eduid
 
-all: install
+all: venv install
