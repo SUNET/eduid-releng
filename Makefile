@@ -5,6 +5,8 @@ INDEX=		$(WHEELS)/simple
 VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 BRANCH=		ft-piptools_requirements
 SUBMODULES=	eduid-am eduid-common eduid-graphdb eduid-lookup-mobile eduid_msg eduid-userdb eduid-queue eduid-scimapi eduid-webapp
+DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
+VERSION?=       $(DATETIME)
 
 update:
 	git submodule update --init
@@ -14,11 +16,6 @@ update:
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
 	git submodule foreach "ls -l"
-	rm -rf sources; rsync -a repos/ sources
-
-clean:
-	rm -rf wheels
-	mkdir wheels
 
 deinit_submodules:
 	cd ${REPOS} && for mod in $(SUBMODULES); do git submodule deinit -f $${mod}; done
@@ -27,27 +24,23 @@ init_submodules:
 	mkdir -p "${REPOS}"
 	cd "${REPOS}"; for mod in $(SUBMODULES); do git submodule add https://github.com/SUNET/$${mod}.git; done
 
-venv:
-	python3 -mvenv $(VENV)
-	$(VENV)/bin/pip install wheel pip-tools piprepo
-	$(VENV)/bin/pip install --extra-index https://pypi.sunet.se/simple pysmscom vccs-client
-
-
 real_clean: clean init_submodules
 
-build: clean update
-	VENV=$(VENV) SOURCES=$(SOURCES) ./build.sh
+prebuild:
+	cd prebuild && make docker
 
-wheels: build
-	cp -ia $(SOURCES)/*/dist/*whl $(WHEELS)
-	$(VENV)/bin/piprepo build $(WHEELS)
+build: update prebuild
+	git submodule status > build/submodules.txt
+	cd build && make VERSION=$(VERSION) docker
 
-webapp: venv wheels
-	find $(WHEELS) -ls
-	$(VENV)/bin/pip install --extra-index-url "file://$(INDEX)" eduid-webapp
+webapp:
+	cd webapp && make VERSION=$(VERSION) docker
 
-	echo "Python packages installed for webapp:"
-	echo ""
-	$(VENV)/bin/pip freeze
+worker:
+	cd worker && make VERSION=$(VERSION) docker
 
-all: venv wheels
+dockers: build webapp worker
+
+all: dockers
+
+.PHONY: prebuild build webapp worker

@@ -1,3 +1,4 @@
-sources
-wheels
+build/sources
+build/wheels
+build/submodules.txt
 *~
