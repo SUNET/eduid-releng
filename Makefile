@@ -4,7 +4,6 @@ WHEELS=		${CURDIR}/wheels
 INDEX=		$(WHEELS)/simple
 VENV=		"${HOME}/.virtualenvs/eduid-releng"
 BRANCH=		ft-piptools_requirements
-LOCAL_SOURCES=	"${HOME}/work/SUNET"
 SUBMODULES=	eduid-am eduid-common eduid-graphdb eduid-lookup-mobile eduid_msg eduid-userdb eduid-queue eduid-scimapi eduid-webapp
 
 update:
@@ -12,9 +11,7 @@ update:
 	git submodule update
 	git submodule foreach 'git reset --hard'
 	git submodule foreach 'git checkout master || git checkout main'
-	git submodule foreach 'git fetch local'
 	git submodule foreach "git checkout ${BRANCH}"
-	git submodule foreach "git pull local ${BRANCH}"
 	git submodule foreach "git show --summary"
 	git submodule foreach "ls -l"
 	rm -rf sources; rsync -a repos/ sources
@@ -29,8 +26,6 @@ deinit_submodules:
 init_submodules:
 	mkdir -p "${REPOS}"
 	cd "${REPOS}"; for mod in $(SUBMODULES); do git submodule add https://github.com/SUNET/$${mod}.git; done
-	git submodule foreach 'git remote remove local || true'
-	cd "${REPOS}" && git submodule foreach 'git remote add -f local $(LOCAL_SOURCES)/$$displaypath'
 
 venv:
 	python3 -mvenv $(VENV)
