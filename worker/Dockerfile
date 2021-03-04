@@ -33,4 +33,8 @@ RUN mkdir -p /opt/eduid
 COPY --from=build /build/wheels/ /build/wheels
 COPY --from=build /opt/eduid/worker /opt/eduid/worker
 
+ADD start-worker.sh /start-worker.sh
+
 ENTRYPOINT ["/bin/bash"]
+
+CMD [ "/start-worker.sh" ]
