@@ -13,7 +13,7 @@ fi
 
 # These could be set from Puppet if multiple instances are deployed
 eduid_queue=${eduid_queue-$eduid_name}
-eduid_entrypoint=${eduid_entrypoint-"${eduid_name}.worker"}
+eduid_entrypoint=${eduid_entrypoint-"eduid_${eduid_name}.worker"}
 # These *can* be set from Puppet, but are less expected to...
 log_dir=${log_dir-'/var/log/eduid'}
 logfile=${logfile-"${log_dir}/${eduid_name}.log"}
@@ -44,7 +44,7 @@ test -f revision.txt && cat revision.txt; true
 # this is a Python module name, so can't have hyphen
 eduid_entrypoint=$(echo $eduid_entrypoint | tr '-' '_')
 
-echo "$0: Starting Celery app '${app_name}' (queue: ${eduid_queue})"
-exec celery worker --app="${app_name}.worker" -Q ${eduid_queue} --events \
+echo "$0: Starting Celery app '${eduid_name}' (queue: ${eduid_queue})"
+exec celery --app="${eduid_entrypoint}" worker -Q ${eduid_queue} --events \
      --uid eduid --gid eduid --logfile="${logfile}" \
     $celery_args

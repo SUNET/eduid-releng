@@ -3,12 +3,12 @@
 set -e
 set -x
 
-. /opt/eduid/webapp/bin/activate
-
 if [[ ! $eduid_name ]]; then
     echo "$0: Environment variable eduid_name not set (should be e.g. 'idp')"
     exit 1
 fi
+
+. /opt/eduid/webapp/bin/activate
 
 # These could be set from Puppet if multiple instances are deployed
 eduid_entrypoint=${eduid_entrypoint-"eduid_webapp.${eduid_name}.run:app"}
@@ -47,15 +47,12 @@ fi
 # Per-webapp initialisation
 #
 case "${eduid_name}" in
-    "authn")
+    'authn'|'idp')
 	saml2_settings="${saml2_settings-${cfg_dir}/saml2_settings.py}"
 	metadata=${metadata-"${state_dir}/metadata.xml"}
 
 	# Metadata generation
 	if [ ! -s "${metadata}" ]; then
-	    # Create file with local SP metadata
-	    ls -l ${cfg_dir}
-	    mount
 	    cd "${cfg_dir}" && \
 		/opt/eduid/webapp/bin/make_metadata.py "${saml2_settings}" | \
 		    xmllint --format - > "${metadata}"
