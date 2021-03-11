@@ -17,7 +17,7 @@ python3 -mvenv "/opt/eduid/${NAME}"
 # and if not found - use the eduid-backend/requirements.txt.
 req="/build/sources/eduid-backend/${NAME}_requirements.txt"
 test -f "${req}" || req="/build/sources/eduid-backend/requirements.txt"
-/opt/eduid/"${NAME}"/bin/pip install --index-url http://0.0.0.0:8080/ --trusted-host 0.0.0.0 -r "${req}"
+/opt/eduid/"${NAME}"/bin/pip install --index-url https://pypi.sunet.se/simple -r "${req}"
 
 /opt/eduid/"${NAME}"/bin/pip freeze
 

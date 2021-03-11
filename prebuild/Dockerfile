@@ -8,7 +8,6 @@ RUN apt-get update && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
       build-essential \
-      git \
       libpython3-dev \
       libssl-dev \
       libxml2-dev \

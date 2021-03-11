@@ -3,7 +3,7 @@ SOURCES=	${CURDIR}/sources
 WHEELS=		${CURDIR}/wheels
 INDEX=		$(WHEELS)/simple
 VENV?=		"${HOME}/.virtualenvs/eduid-releng"
-BRANCH=		main
+BRANCH=		origin/main
 SUBMODULES=	eduid-backend
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=       $(DATETIME)
@@ -11,8 +11,6 @@ VERSION?=       $(DATETIME)
 update:
 	git submodule update --init
 	git submodule update
-	git submodule foreach 'git reset --hard'
-	git submodule foreach 'git checkout master || git checkout main'
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
 	git submodule foreach "ls -l"

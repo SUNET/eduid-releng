@@ -3,7 +3,7 @@
 set -e
 set -x
 
-if [[ ! $eduid_name ]]; then
+if [[ ! "${eduid_name}" ]]; then
     echo "$0: Environment variable eduid_name not set (should be e.g. 'am')"
     exit 1
 fi
@@ -21,16 +21,6 @@ logfile=${logfile-"${log_dir}/${eduid_name}.log"}
 chown eduid: "${log_dir}"
 
 celery_args=${celery_args-'--loglevel INFO'}
-if [ -f /opt/eduid/src/${eduid_name}/setup.py -o \
-     -f /opt/eduid/src/eduid?${eduid_name}/setup.py ]; then
-    # eduid-dev environment
-    celery_args="--loglevel DEBUG"
-else
-    if [ -f "${cfg_dir}/${app_name}_DEBUG" ]; then
-	# eduid-dev environment
-	celery_args="--loglevel DEBUG"
-    fi
-fi
 
 touch "${logfile}"
 chown eduid: "${logfile}"
@@ -45,7 +35,7 @@ test -f /submodules.txt && cat /submodules.txt; true
 export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 
 # this is a Python module name, so can't have hyphen
-eduid_entrypoint=$(echo $eduid_entrypoint | tr '-' '_')
+eduid_entrypoint=$(echo "${eduid_entrypoint}" | tr '-' '_')
 
 echo "$0: Starting Celery app '${eduid_name}' (queue: ${eduid_queue})"
 exec celery --app="${eduid_entrypoint}" worker -Q "${eduid_queue}" --events \
