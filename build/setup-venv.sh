@@ -8,36 +8,6 @@ if [[ ! $NAME ]]; then
     exit 1
 fi
 
-# Install an eduid virtualenv. To be able to control exactly what packages are installed,
-# we have to start a local pypiserver.
-
-test -d /root/pypiserver || {
-    python3 -mvenv /root/pypiserver
-
-    /root/pypiserver/bin/pip install pypiserver passlib
-    ls -l /root/pypiserver/bin
-}
-
-PYPI=0
-
-term_handler() {
-    if [ $PYPI -ne 0 ]; then
-        kill -SIGTERM "$PYPI"
-        wait "$PYPI"
-    fi
-    exit 143; # 128 + 15 -- SIGTERM
-}
-
-trap 'term_handler' SIGTERM
-
-
-/root/pypiserver/bin/pypi-server \
-    --fallback-url https://pypi.org/simple/ \
-    --log-file /tmp/pypiserver.log \
-    /build/wheels &
-PYPI=$!
-
-
 banner "${NAME}"
 
 python3 -mvenv "/opt/eduid/${NAME}"

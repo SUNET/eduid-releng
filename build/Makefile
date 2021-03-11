@@ -1,34 +1,34 @@
 REPOS=		${CURDIR}/repos
 SOURCES=	${CURDIR}/sources
-WHEELS=		${CURDIR}/wheels
 INDEX=		$(WHEELS)/simple
 VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 BRANCH=		ft-piptools_requirements
 
+all:
+	$(info --- INFO: Run 'make install' or 'make docker' ---)
+
+
+# Export the submodules to clean source directories. This has to run outside of the docked build.
 update:
-	rm -rf sources; rsync -a repos/ sources
+	rm -rf $(SOURCES)
+	mkdir -p $(SOURCES)
+	ls -l $(REPOS)
+	(cd $(REPOS)/eduid-backend && git archive --format=tar --prefix=eduid-backend/ HEAD) | (cd $(SOURCES) && tar xf -)
+	cd $(REPOS)/eduid-backend && git show --summary > $(SOURCES)/eduid-backend/revision.txt
 
 clean:
-	rm -rf wheels
-	mkdir wheels
+	rm -rf $(SOURCES)
 
-venv:
-	python3 -mvenv $(VENV)
-	$(VENV)/bin/pip install wheel pip-tools piprepo
-	$(VENV)/bin/pip install --extra-index https://pypi.sunet.se/simple pysmscom vccs-client
+# Essentially create the same venv twice, to have the option to massage them differently down the line
+install:
+	NAME=webapp ./setup-venv.sh eduid-backend
+	NAME=worker ./setup-venv.sh eduid-backend
 
-build: clean update venv
-	test -n $(VERSION) || exit 1
-	VENV=$(VENV) SOURCES=$(SOURCES) VERSION="$(VERSION)" ./build.sh
-
-wheels: build
-	cp -ia $(SOURCES)/*/dist/*whl $(WHEELS) || true
-	$(VENV)/bin/piprepo build $(WHEELS)
-
-# The Dockerfile in this directory will execute 'make wheels' inside a build-image,
+# The Dockerfile in this directory will execute 'make install' inside a build-image,
 # and then initialise one or more virtualenvs under /opt/eduid using the setup-venv.sh script.
-docker:
+docker: update
 	test -n $(VERSION) || exit 1
 	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-build:$(VERSION)" .
 
-all: venv wheels
+
+.PHONY: update clean install docker

@@ -11,7 +11,7 @@ fi
 . /opt/eduid/webapp/bin/activate
 
 # These could be set from Puppet if multiple instances are deployed
-eduid_entrypoint=${eduid_entrypoint-"eduid_webapp.${eduid_name}.run:app"}
+eduid_entrypoint=${eduid_entrypoint-"eduid.webapp.${eduid_name}.run:app"}
 base_dir=${base_dir-'/opt/eduid'}
 project_dir=${project_dir-"${base_dir}/eduid-webapp/src"}
 app_dir=${app_dir-"${project_dir}/${eduid_name}"}
@@ -77,8 +77,8 @@ exec start-stop-daemon --start -c eduid:eduid --exec \
      --pidfile "${state_dir}/${eduid_name}.pid" \
      --user=eduid --group=eduid -- \
      --bind 0.0.0.0:8080 \
-     --workers ${workers} --worker-class ${worker_class} \
-     --threads ${worker_threads} --timeout ${worker_timeout} \
+     --workers "${workers}" --worker-class "${worker_class}" \
+     --threads "${worker_threads}" --timeout "${worker_timeout}" \
      --forwarded-allow-ips="${forwarded_allow_ips}" \
      --access-logfile "${log_dir}/${eduid_name}-access.log" \
      --error-logfile "${log_dir}/${eduid_name}-error.log" \

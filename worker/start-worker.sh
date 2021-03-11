@@ -13,7 +13,7 @@ fi
 
 # These could be set from Puppet if multiple instances are deployed
 eduid_queue=${eduid_queue-$eduid_name}
-eduid_entrypoint=${eduid_entrypoint-"eduid_${eduid_name}.worker"}
+eduid_entrypoint=${eduid_entrypoint-"eduid.workers.${eduid_name}.worker"}
 # These *can* be set from Puppet, but are less expected to...
 log_dir=${log_dir-'/var/log/eduid'}
 logfile=${logfile-"${log_dir}/${eduid_name}.log"}
