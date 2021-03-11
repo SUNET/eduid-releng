@@ -11,14 +11,17 @@ fi
 
 # if VERSION is a DATETIME from the Makefile, the T has to be replaced with a dot
 # to be PEP 440 compliant.
-VERSION="$(echo $VERSION | tr T .)"
+VERSION="$(echo "${VERSION}" | tr T .)"
 
-source ${VENV}/bin/activate
+source "${VENV}"/bin/activate
 
 if [ ! -d "${SOURCES}" ]; then
     echo "$0: SOURCES not set"
     exit 1
 fi
+
+# The rest of this script is disabled for now, since we don't install any eduID package(s) anymore.y
+exit 0
 
 cd "${SOURCES}"
 

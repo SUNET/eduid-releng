@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 set -x
@@ -39,12 +39,15 @@ chmod 640 "${logfile}"
 # nice to have in docker run output, to check what
 # version of something is actually running.
 /opt/eduid/worker/bin/pip freeze
-test -f revision.txt && cat revision.txt; true
+test -f /revision.txt && cat /revision.txt; true
+test -f /submodules.txt && cat /submodules.txt; true
+
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 
 # this is a Python module name, so can't have hyphen
 eduid_entrypoint=$(echo $eduid_entrypoint | tr '-' '_')
 
 echo "$0: Starting Celery app '${eduid_name}' (queue: ${eduid_queue})"
-exec celery --app="${eduid_entrypoint}" worker -Q ${eduid_queue} --events \
+exec celery --app="${eduid_entrypoint}" worker -Q "${eduid_queue}" --events \
      --uid eduid --gid eduid --logfile="${logfile}" \
     $celery_args

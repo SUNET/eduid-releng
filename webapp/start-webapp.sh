@@ -36,6 +36,8 @@ echo "PYTHONPATH=${PYTHONPATH}"
 # nice to have in docker run output, to check what
 # version of something is actually running.
 /opt/eduid/webapp/bin/pip freeze
+test -f /revision.txt && cat /revision.txt; true
+test -f /submodules.txt && cat /submodules.txt; true
 
 extra_args=""
 if [ -f "/opt/eduid/src/eduid-webapp/setup.py" ]; then
@@ -62,7 +64,7 @@ case "${eduid_name}" in
 	;;
 esac
 
-
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 
 echo ""
 echo "$0: Starting ${eduid_name}"

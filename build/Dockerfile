@@ -8,7 +8,8 @@ COPY . /build/
 WORKDIR /build
 RUN make wheels
 
-RUN NAME=webapp /build/setup-venv.sh eduid-webapp
-RUN NAME=worker /build/setup-venv.sh eduid-am eduid-msg eduid-lookup-mobile
+# Essentially create the same venv twice, to have the option to massage them differently down the line
+RUN NAME=webapp /build/setup-venv.sh eduid-backend
+RUN NAME=worker /build/setup-venv.sh eduid-backend
 
 RUN ls -l /opt/eduid

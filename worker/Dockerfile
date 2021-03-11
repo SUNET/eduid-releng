@@ -31,6 +31,7 @@ RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log
 RUN mkdir -p /opt/eduid
 
 COPY --from=build /build/wheels/ /build/wheels
+COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
 COPY --from=build /opt/eduid/worker /opt/eduid/worker
 
 ADD start-worker.sh /start-worker.sh

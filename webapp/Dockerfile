@@ -38,9 +38,8 @@ RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log
 RUN mkdir -p /opt/eduid
 
 COPY --from=build /build/wheels/ /build/wheels
+COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
 COPY --from=build /opt/eduid/webapp /opt/eduid/webapp
-
-VOLUME ["/opt/eduid/etc", "/opt/eduid/run", "/opt/eduid/src", "/var/log"]
 
 WORKDIR /opt/eduid
 

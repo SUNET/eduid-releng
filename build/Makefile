@@ -17,16 +17,16 @@ venv:
 	$(VENV)/bin/pip install wheel pip-tools piprepo
 	$(VENV)/bin/pip install --extra-index https://pypi.sunet.se/simple pysmscom vccs-client
 
-real_clean: clean init_submodules
-
 build: clean update venv
 	test -n $(VERSION) || exit 1
 	VENV=$(VENV) SOURCES=$(SOURCES) VERSION="$(VERSION)" ./build.sh
 
 wheels: build
-	cp -ia $(SOURCES)/*/dist/*whl $(WHEELS)
+	cp -ia $(SOURCES)/*/dist/*whl $(WHEELS) || true
 	$(VENV)/bin/piprepo build $(WHEELS)
 
+# The Dockerfile in this directory will execute 'make wheels' inside a build-image,
+# and then initialise one or more virtualenvs under /opt/eduid using the setup-venv.sh script.
 docker:
 	test -n $(VERSION) || exit 1
 	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-build:$(VERSION)" .
