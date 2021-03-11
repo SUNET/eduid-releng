@@ -1,10 +1,10 @@
-REPOS=		${CURDIR}/repos
+REPOS=		${CURDIR}/build/repos
 SOURCES=	${CURDIR}/sources
 WHEELS=		${CURDIR}/wheels
 INDEX=		$(WHEELS)/simple
 VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 BRANCH=		ft-piptools_requirements
-SUBMODULES=	eduid-am eduid-common eduid-graphdb eduid-lookup-mobile eduid_msg eduid-userdb eduid-queue eduid-scimapi eduid-webapp
+SUBMODULES=	eduid-backend
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=       $(DATETIME)
 

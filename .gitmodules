@@ -1,0 +1,3 @@
+[submodule "build/repos/eduid-backend"]
+	path = build/repos/eduid-backend
+	url = https://github.com/SUNET/eduid-backend.git
