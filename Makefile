@@ -3,6 +3,7 @@ SOURCES=	${CURDIR}/sources
 WHEELS=		${CURDIR}/wheels
 INDEX=		$(WHEELS)/simple
 VENV?=		"${HOME}/.virtualenvs/eduid-releng"
+TAGSUFFIX?=	testing
 BRANCH=		origin/main
 SUBMODULES=	eduid-backend
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
@@ -13,7 +14,11 @@ update:
 	git submodule update
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
-	git submodule foreach "ls -l"
+
+pull_submodules: update
+	git submodule foreach "git fetch origin"
+	git submodule foreach "git checkout ${BRANCH}"
+	git submodule foreach "git show --summary"
 
 deinit_submodules:
 	cd ${REPOS} && for mod in $(SUBMODULES); do git submodule deinit -f $${mod}; done
@@ -38,6 +43,10 @@ worker:
 	cd worker && make VERSION=$(VERSION) docker
 
 dockers: build webapp worker
+
+dockers_tagpush:
+	cd webapp && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 
 all: dockers
 

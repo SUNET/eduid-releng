@@ -3,15 +3,5 @@ git:
 slack:
   room: "eduid-builds"
 script:
-  - make dockers
-upstream:
-  - eduid-am
-  - eduid-common
-  - eduid-graphdb
-  - eduid-lookup-mobile
-  - eduid_msg
-  - eduid-queue
-  - eduid-scimapi
-  - eduid-userdb
-  - eduid-webapp
+  - make dockers dockers_tagpush
 clean_workspace: false
