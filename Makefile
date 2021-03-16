@@ -19,6 +19,7 @@ pull_submodules: update
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
+	git commit -m "updated eduid-releng submodule to branch ${BRANCH}" build/repos/eduid-backend
 
 deinit_submodules:
 	cd ${REPOS} && for mod in $(SUBMODULES); do git submodule deinit -f $${mod}; done
