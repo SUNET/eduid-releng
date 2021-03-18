@@ -26,7 +26,8 @@ worker_timeout=${worker_timeout-30}
 # Need to tell Gunicorn to trust the X-Forwarded-* headers
 forwarded_allow_ips=${forwarded_allow_ips-'*'}
 
-chown -R eduid: "${log_dir}" "${state_dir}"
+test -d "${log_dir}" && chown -R eduid: "${log_dir}"
+test -d "${state_dir}" && chown -R eduid: "${state_dir}"
 
 # set PYTHONPATH if it is not already set using Docker environment
 export PYTHONPATH=${PYTHONPATH-${project_dir}}
