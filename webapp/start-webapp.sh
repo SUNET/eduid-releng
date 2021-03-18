@@ -52,11 +52,16 @@ case "${eduid_name}" in
 	saml2_settings="${saml2_settings-${cfg_dir}/saml2_settings.py}"
 	metadata=${metadata-"${state_dir}/metadata.xml"}
 
-	# Metadata generation
-	if [ ! -s "${metadata}" ]; then
-	    cd "${cfg_dir}" && \
+	if [[ ! -f "${saml2_settings}" ]]; then
+	    echo "$0: SAML2 settings file ${saml2_settings} NOT FOUND, can't generate ${metadata}"
+	else
+	    # Metadata generation, if it does not exist already
+	    if [ ! -s "${metadata}" ]; then
+		_dir=$(dirname "${saml2_settings}")
+		cd "${_dir}"
 		/opt/eduid/webapp/bin/make_metadata.py "${saml2_settings}" | \
 		    xmllint --format - > "${metadata}"
+	    fi
 	fi
 	;;
     *)
