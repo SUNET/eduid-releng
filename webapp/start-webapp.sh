@@ -17,7 +17,6 @@ project_dir=${project_dir-"${base_dir}/eduid-webapp/src"}
 app_dir=${app_dir-"${project_dir}/${eduid_name}"}
 cfg_dir=${cfg_dir-"${base_dir}/etc"}
 # These *can* be set from Puppet, but are less expected to...
-config_ns=${config_ns-"/eduid/webapp/${eduid_name}"}
 log_dir=${log_dir-'/var/log/eduid'}
 state_dir=${state_dir-"${base_dir}/run"}
 workers=${workers-1}
@@ -69,9 +68,13 @@ export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 echo ""
 echo "$0: Starting ${eduid_name}"
 
-export EDUID_CONFIG_NS=${EDUID_CONFIG_NS-${config_ns}}
+if [[ $EDUID_CONFIG_NS ]]; then
+    # This is an override to control what configuration is loaded by this app -
+    # it is not needed in the normal case (and jsconfig won't work if it is set
+    # because it loads two configuration sections)
+    echo "Reading settings from: ${EDUID_CONFIG_NS}"
+fi
 
-echo "Reading settings from: ${EDUID_CONFIG_NS-'No namespace set'}"
 exec start-stop-daemon --start -c eduid:eduid --exec \
      /opt/eduid/webapp/bin/gunicorn \
      --pidfile "${state_dir}/${eduid_name}.pid" \
