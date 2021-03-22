@@ -8,3 +8,4 @@ WORKDIR /build
 RUN make install
 
 RUN ls -l /opt/eduid
+RUN du -shc /opt/eduid/*

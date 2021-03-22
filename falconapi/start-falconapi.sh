@@ -8,12 +8,16 @@ if [[ ! $eduid_name ]]; then
     exit 1
 fi
 
-. /opt/eduid/webapp/bin/activate
+if [[ ! $eduid_entrypoint ]]; then
+    echo "$0: Environment variable eduid_entrypoint not set (should be e.g. 'eduid.scimapi.run:api')"
+    exit 1
+fi
+
+. /opt/eduid/falconapi/bin/activate
 
 # These could be set from Puppet if multiple instances are deployed
-eduid_entrypoint=${eduid_entrypoint-"eduid.webapp.${eduid_name}.run:app"}
 base_dir=${base_dir-'/opt/eduid'}
-project_dir=${project_dir-"${base_dir}/eduid-webapp/src"}
+project_dir=${project_dir-"${base_dir}/eduid-falconapi/src"}
 app_dir=${app_dir-"${project_dir}/${eduid_name}"}
 cfg_dir=${cfg_dir-"${base_dir}/etc"}
 # These *can* be set from Puppet, but are less expected to...
@@ -35,38 +39,15 @@ echo "PYTHONPATH=${PYTHONPATH}"
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-/opt/eduid/webapp/bin/pip freeze
+/opt/eduid/falconapi/bin/pip freeze
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
 extra_args=""
-if [ -f "/opt/eduid/src/eduid-webapp/setup.py" ]; then
+if [ -f "/opt/eduid/DEVEL_MODE" ]; then
     # developer mode, restart on code changes
     extra_args="--reload"
 fi
-
-#
-# Per-webapp initialisation
-#
-case "${eduid_name}" in
-    'authn'|'idp')
-	saml2_settings="${saml2_settings-${cfg_dir}/saml2_settings.py}"
-	metadata=${metadata-"${state_dir}/metadata.xml"}
-
-	if [[ ! -f "${saml2_settings}" ]]; then
-	    echo "$0: SAML2 settings file ${saml2_settings} NOT FOUND, can't generate ${metadata}"
-	else
-	    # Metadata generation, if it does not exist already
-	    if [ ! -s "${metadata}" ]; then
-		cd "$(dirname "${saml2_settings}")"
-		/opt/eduid/webapp/bin/make_metadata.py "${saml2_settings}" | \
-		    xmllint --format - > "${metadata}"
-	    fi
-	fi
-	;;
-    *)
-	;;
-esac
 
 export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 
@@ -81,7 +62,7 @@ if [[ $EDUID_CONFIG_NS ]]; then
 fi
 
 exec start-stop-daemon --start -c eduid:eduid --exec \
-     /opt/eduid/webapp/bin/gunicorn \
+     /opt/eduid/falconapi/bin/gunicorn \
      --pidfile "${state_dir}/${eduid_name}.pid" \
      --user=eduid --group=eduid -- \
      --bind 0.0.0.0:8080 \

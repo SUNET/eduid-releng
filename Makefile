@@ -43,12 +43,16 @@ webapp:
 worker:
 	cd worker && make VERSION=$(VERSION) docker
 
-dockers: build webapp worker
+falconapi:
+	cd falconapi && make VERSION=$(VERSION) docker
+
+dockers: build webapp worker falconapi
 
 dockers_tagpush:
 	cd webapp && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd falconapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 
 all: dockers
 
-.PHONY: prebuild build webapp worker
+.PHONY: prebuild build webapp worker falconapi
