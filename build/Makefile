@@ -27,7 +27,7 @@ install:
 # The Dockerfile in this directory will execute 'make install' inside a build-image,
 # and then initialise one or more virtualenvs under /opt/eduid using the setup-venv.sh script.
 docker: update
-	test -n $(VERSION) || exit 1
+	test -n '$(VERSION)' || exit 1
 	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-build:$(VERSION)" .
 
 
