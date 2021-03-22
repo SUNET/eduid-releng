@@ -6,16 +6,26 @@ VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 TAGSUFFIX?=	testing
 BRANCH=		origin/main
 SUBMODULES=	eduid-backend
+DOCKERS=        webapp worker falconapi
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=       $(DATETIME)
 
-update:
+all:
+	$(info --- INFO: eduID release engineering ---)
+	$(info ---)
+	$(info --- INFO: The main targets of this Makefile are: )
+	$(info ---)
+	$(info ---         update_what_to_build: Update what code will be built to the upstream branch $(BRANCH) ---)
+	$(info ---         dockers:              Build docker images $(DOCKERS) ---)
+	$(info ---)
+
+build_prep:
 	git submodule update --init
 	git submodule update
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
 
-pull_submodules: update
+update_what_to_build: build_prep
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
@@ -33,7 +43,7 @@ real_clean: clean init_submodules
 prebuild:
 	cd prebuild && make docker
 
-build: update prebuild
+build: build_prep prebuild
 	git submodule status > build/submodules.txt
 	cd build && make VERSION=$(VERSION) docker
 
@@ -46,13 +56,11 @@ worker:
 falconapi:
 	cd falconapi && make VERSION=$(VERSION) docker
 
-dockers: build webapp worker falconapi
+dockers: build $(DOCKERS)
 
 dockers_tagpush:
 	cd webapp && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd falconapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-
-all: dockers
 
 .PHONY: prebuild build webapp worker falconapi
