@@ -6,7 +6,7 @@ VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 TAGSUFFIX?=	testing
 BRANCH=		origin/main
 SUBMODULES=	eduid-backend
-DOCKERS=        webapp worker falconapi
+DOCKERS=        webapp worker falconapi satosa_scim
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=       $(DATETIME)
 
@@ -56,11 +56,15 @@ worker:
 falconapi:
 	cd falconapi && make VERSION=$(VERSION) docker
 
+satosa_scim:
+	cd satosa_scim && make VERSION=$(VERSION) docker
+
 dockers: build $(DOCKERS)
 
 dockers_tagpush:
 	cd webapp && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd falconapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd satosa_scim && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 
-.PHONY: prebuild build webapp worker falconapi
+.PHONY: prebuild build webapp worker falconapi satosa_scim
