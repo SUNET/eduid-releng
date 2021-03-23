@@ -11,7 +11,9 @@ env DEBIAN_FRONTEND noninteractive
 RUN /bin/sed -i s/deb.debian.org/ftp.se.debian.org/g /etc/apt/sources.list
 
 #
-# Install tools that are helpful when troubleshooting.
+# Install tools that are helpful when troubleshooting, and those required by SATOSA:
+#
+#   xmlsec1
 #
 RUN apt-get update && \
     apt-get -y dist-upgrade && \
@@ -24,6 +26,7 @@ RUN apt-get update && \
       procps \
       python3-minimal \
       python3-distutils \
+      xmlsec1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system eduid && adduser --system --shell /bin/false eduid
