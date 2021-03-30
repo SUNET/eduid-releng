@@ -68,16 +68,17 @@ dockers_tagpush:
 	cd worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd falconapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd satosa_scim && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	$(info --- INFO: eduID release engineering ---)
-	$(info ---)
-	$(info ---  Docker images for version $(VERSION) built and pushed)
-	$(info ---)
+	@echo ""
+	@echo "--- INFO: eduID release engineering ---"
+	@echo "---"
+	@echo "---  Docker images for version $(VERSION) built and pushed)"
+	@echo "---"
 
 staging_release:
 	cd webapp && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 	cd worker && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd falconapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd satosa_scim && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd falconapi && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 
 production_release:
 	cd webapp && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
@@ -85,4 +86,4 @@ production_release:
 	cd falconapi && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
-.PHONY: prebuild build webapp worker falconapi satosa_scim
+.PHONY: prebuild build webapp worker falconapi satosa_scim staging_release production_release
