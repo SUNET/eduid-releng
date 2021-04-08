@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# This script runs inside a Docker container. It figures out which Celery worker
+# runs in this container, and does an appropriate 'celery status' on that worker.
+#
+# This script is executed form the outside using 'docker exec' in
+# /usr/local/libexec/nagios/run_check_celery_worker.sh, which in turn is
+# executed using Nagios NRPE.
+#
+
+if [[ ! $eduid_name ]]; then
+    echo "$0: Environment variable eduid_name not set"
+    exit 1
+fi
+
+
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
+eduid_entrypoint=${eduid_entrypoint-"eduid.workers.${eduid_name}.worker"}
+
+min_nodes=${2-'3'}
+# The output of the status command looks like this:
+#
+#   $ /opt/eduid/worker/bin/celery --app="${eduid_entrypoint}" -q -C status
+#   celery@6481f74188cf: OK
+#   celery@449fb59ab9bb: OK
+#   celery@55d11465512b: OK
+#   celery@d93aae08a873: OK
+#   celery@8567ad310fb7: OK
+#   celery@8b4f09bdb277: OK
+#
+#   6 nodes online.
+#   $
+#
+# Check if at least $min_nodes lines end with "OK", and exit 1 if there are not enough lines.
+awkscript="
+/OK$/ {count++}
+END {
+  if (count < ${min_nodes}) {
+     print \"ERROR: Celery status reports \" count \" nodes online, a minimum of ${min_nodes} were expected\"
+     exit 1
+  }
+     print \"OK: Celery status reports \" count \" nodes online (expected minimum ${min_nodes})\"
+}"
+
+/opt/eduid/worker/bin/celery --app="${eduid_entrypoint}" -q -C status | \
+    awk "${awkscript}"
+exit $?

@@ -35,6 +35,9 @@ COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
 COPY --from=build /opt/eduid/worker /opt/eduid/worker
 
 ADD start-worker.sh /start-worker.sh
+ADD worker_healthcheck /usr/local/bin
+
+HEALTHCHECK --interval=53s --timeout=15s --start-period=10s CMD /usr/local/bin/worker_healthcheck
 
 ENTRYPOINT ["/bin/bash"]
 
