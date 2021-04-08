@@ -73,6 +73,12 @@ dockers_tagpush:
 	@echo "---"
 	@echo "---  Docker images for version $(VERSION) built and pushed)"
 	@echo "---"
+	@echo "---  Probable next step:"
+	@echo "---"
+	@echo "---    make VERSION=$(VERSION) staging_release"
+	@echo "---"
+	@echo "---  in the eduid-releng repository"
+	@echo "---"
 
 staging_release:
 	cd webapp && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
