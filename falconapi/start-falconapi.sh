@@ -43,10 +43,9 @@ echo "PYTHONPATH=${PYTHONPATH}"
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
-extra_args=""
 if [ -f "/opt/eduid/DEVEL_MODE" ]; then
     # developer mode, restart on code changes
-    extra_args="--reload"
+    extra_args="${extra_args:+${extra_args} }--reload"
 fi
 
 export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"

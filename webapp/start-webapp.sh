@@ -39,10 +39,9 @@ echo "PYTHONPATH=${PYTHONPATH}"
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
-extra_args=""
 if [ -f "/opt/eduid/src/eduid-webapp/setup.py" ]; then
     # developer mode, restart on code changes
-    extra_args="--reload"
+    extra_args="${extra_args:+${extra_args} }--reload"
 fi
 
 #
