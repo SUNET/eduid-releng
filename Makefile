@@ -8,7 +8,7 @@ STAGINGTAG?=	staging
 PRODTAG?=	production
 BRANCH=		origin/main
 SUBMODULES=	eduid-backend
-DOCKERS=        webapp worker falconapi satosa_scim
+DOCKERS=        webapp worker falconapi satosa_scim fastapi
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=       $(DATETIME)
 
@@ -28,6 +28,7 @@ build_prep:
 	git submodule foreach "git show --summary"
 
 update_what_to_build: build_prep
+	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
@@ -61,6 +62,9 @@ falconapi:
 satosa_scim:
 	cd satosa_scim && make VERSION=$(VERSION) docker
 
+fastapi:
+	cd fastapi && make VERSION=$(VERSION) docker
+
 dockers: build $(DOCKERS)
 
 dockers_tagpush:
@@ -85,11 +89,13 @@ staging_release:
 	cd worker && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 	cd falconapi && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd fastapi && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 
 production_release:
 	cd webapp && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd worker && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd falconapi && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd fastapi && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
-.PHONY: prebuild build webapp worker falconapi satosa_scim staging_release production_release
+.PHONY: prebuild build $(DOCKERS) staging_release production_release
