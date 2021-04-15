@@ -41,6 +41,9 @@ init_submodules:
 	mkdir -p "${REPOS}"
 	cd "${REPOS}"; for mod in $(SUBMODULES); do git submodule add https://github.com/SUNET/$${mod}.git; done
 
+clean:
+	docker rmi eduid-prebuild -f
+
 real_clean: clean init_submodules
 
 prebuild:
