@@ -51,7 +51,7 @@ EXPOSE 8080
 
 ADD start-webapp.sh /start-webapp.sh
 
-HEALTHCHECK --interval=53s CMD curl http://localhost:8080/status/healthy | grep -q STATUS_OK
+HEALTHCHECK --interval=27s CMD curl http://localhost:8080/status/healthy | grep -q STATUS_OK
 
 ENTRYPOINT [ "/bin/bash"]
 
