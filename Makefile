@@ -28,6 +28,7 @@ build_prep:
 	git submodule foreach "git show --summary"
 
 update_what_to_build: build_prep
+	git pull
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
