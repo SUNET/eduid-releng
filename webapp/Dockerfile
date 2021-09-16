@@ -25,6 +25,7 @@ RUN apt-get update && \
       curl \
       iputils-ping \
       libjpeg-dev \
+      ghostscript \
       libxml2-utils \
       net-tools \
       netcat-openbsd \
