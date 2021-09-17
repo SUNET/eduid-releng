@@ -19,13 +19,14 @@ update:
 clean:
 	rm -rf $(SOURCES)
 
-# Essentially create the same venv twice, to have the option to massage them differently down the line
+# Essentially create the same venv for each sub-image, to have the option to massage them differently down the line
 install:
+	NAME=admintools ./setup-venv.sh
+	NAME=falconapi ./setup-venv.sh
+	NAME=fastapi ./setup-venv.sh
+	NAME=satosa_scim ./setup-venv.sh
 	NAME=webapp ./setup-venv.sh
 	NAME=worker ./setup-venv.sh
-	NAME=falconapi ./setup-venv.sh
-	NAME=satosa_scim ./setup-venv.sh
-	NAME=fastapi ./setup-venv.sh
 
 # The Dockerfile in this directory will execute 'make install' inside a build-image,
 # and then initialise one or more virtualenvs under /opt/eduid using the setup-venv.sh script.
