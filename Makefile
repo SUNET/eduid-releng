@@ -8,7 +8,7 @@ STAGINGTAG?=	staging
 PRODTAG?=	production
 BRANCH=		origin/main
 SUBMODULES=	eduid-backend
-DOCKERS=        webapp worker falconapi satosa_scim fastapi
+DOCKERS=        webapp worker falconapi satosa_scim fastapi admintools
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=       $(DATETIME)
 

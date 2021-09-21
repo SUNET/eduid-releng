@@ -46,6 +46,4 @@ ADD start-admintools.sh /start-admintools.sh
 # No health check endpoint in admintools
 #HEALTHCHECK --interval=27s CMD curl http://localhost:8080/status/healthy | grep -q STATUS_OK
 
-ENTRYPOINT [ "/bin/bash"]
-
-CMD [ "/start-admintools.sh" ]
+ENTRYPOINT [ "/bin/bash", "/start-admintools.sh" ]
