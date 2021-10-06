@@ -37,7 +37,16 @@ export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 # this is a Python module name, so can't have hyphen
 eduid_entrypoint=$(echo "${eduid_entrypoint}" | tr '-' '_')
 
-echo "$0: Starting Celery app '${eduid_name}' (queue: ${eduid_queue})"
-exec celery --app="${eduid_entrypoint}" worker -Q "${eduid_queue}" --events \
-     --uid eduid --gid eduid --logfile="${logfile}" \
-    $celery_args
+if [ "x$NEW_QUEUE" != "x" ]; then
+    echo "$0: Starting queue worker '${eduid_name}'"
+    exec start-stop-daemon --start -c eduid:eduid --exec \
+        /opt/eduid/worker/bin/python \
+        --pidfile "${eduid_name}.pid" \
+        --user=eduid --group=eduid -- \
+        -m ${eduid_entrypoint}
+else
+    echo "$0: Starting Celery app '${eduid_name}' (queue: ${eduid_queue})"
+    exec celery --app="${eduid_entrypoint}" worker -Q "${eduid_queue}" --events \
+         --uid eduid --gid eduid --logfile="${logfile}" \
+        $celery_args
+fi
