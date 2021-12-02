@@ -10,6 +10,9 @@ env DEBIAN_FRONTEND noninteractive
 
 RUN /bin/sed -i s/deb.debian.org/ftp.se.debian.org/g /etc/apt/sources.list
 
+# Add user/group before installing any packages to get consistent uid/gid
+RUN addgroup --system eduid && adduser --system --shell /bin/false --ingroup eduid eduid
+
 #
 # Install tools that are helpful when troubleshooting
 #
@@ -26,8 +29,6 @@ RUN apt-get update && \
       python3-minimal \
       python3-distutils \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN addgroup --system eduid && adduser --system --shell /bin/false eduid
 
 RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log/eduid
 
