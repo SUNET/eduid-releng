@@ -26,6 +26,8 @@ RUN apt-get update && \
       python3-distutils \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN addgroup --system eduid && adduser --system --shell /bin/false eduid
+
 RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log/eduid
 
 RUN mkdir -p /opt/eduid
