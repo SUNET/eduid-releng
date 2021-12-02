@@ -2,6 +2,9 @@ FROM debian:stable
 
 env DEBIAN_FRONTEND noninteractive
 
+# Do this first of all to ensure consistent uid/gid in all the other images
+RUN addgroup --system eduid && adduser --system --shell /bin/false eduid
+
 RUN /bin/sed -i s/deb.debian.org/ftp.se.debian.org/g /etc/apt/sources.list
 
 RUN apt-get update && \
