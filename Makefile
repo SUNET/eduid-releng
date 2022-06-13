@@ -6,7 +6,8 @@ VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 TAGSUFFIX?=	testing
 STAGINGTAG?=	staging
 PRODTAG?=	production
-BRANCH=		origin/main
+MAINBRANCH=	origin/main
+BRANCH?=	$(MAINBRANCH)
 SUBMODULES=	eduid-backend
 DOCKERS=        webapp worker falconapi satosa_scim fastapi admintools
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
@@ -29,7 +30,7 @@ build_prep:
 
 update_what_to_build: build_prep
 	git pull
-	git submodule foreach "git checkout ${BRANCH}"
+	git submodule foreach "git checkout ${MAINBRANCH}"
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
