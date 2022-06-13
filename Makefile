@@ -25,7 +25,6 @@ all:
 build_prep:
 	git submodule update --init
 	git submodule update
-	git submodule foreach "git checkout ${MAINBRANCH}"
 	git submodule foreach "git show --summary"
 
 update_what_to_build: build_prep
