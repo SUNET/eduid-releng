@@ -24,7 +24,7 @@ all:
 
 build_prep:
 	git submodule update --init
-	git submodule update
+	git submodule update --remote
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
 
