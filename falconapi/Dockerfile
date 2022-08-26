@@ -8,8 +8,6 @@ FROM debian:stable
 
 env DEBIAN_FRONTEND noninteractive
 
-RUN /bin/sed -i s/deb.debian.org/ftp.se.debian.org/g /etc/apt/sources.list
-
 # Add user/group before installing any packages to get consistent uid/gid
 RUN addgroup --system eduid && adduser --system --shell /bin/false --ingroup eduid eduid
 

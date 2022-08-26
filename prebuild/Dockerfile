@@ -2,8 +2,6 @@ FROM debian:stable
 
 env DEBIAN_FRONTEND noninteractive
 
-RUN /bin/sed -i s/deb.debian.org/ftp.se.debian.org/g /etc/apt/sources.list
-
 RUN apt-get update && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
