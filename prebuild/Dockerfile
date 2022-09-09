@@ -7,6 +7,7 @@ RUN apt-get update && \
     apt-get install -y \
       build-essential \
       libffi-dev \
+      libfreetype-dev \
       libjpeg-dev \
       libpython3-dev \
       libssl-dev \
