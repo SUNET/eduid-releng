@@ -22,7 +22,6 @@ clean:
 # Essentially create the same venv for each sub-image, to have the option to massage them differently down the line
 install:
 	NAME=admintools ./setup-venv.sh
-	NAME=falconapi ./setup-venv.sh
 	NAME=fastapi ./setup-venv.sh
 	NAME=satosa_scim ./setup-venv.sh
 	NAME=webapp ./setup-venv.sh
