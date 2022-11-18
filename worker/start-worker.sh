@@ -14,6 +14,7 @@ fi
 # These could be set from Puppet if multiple instances are deployed
 eduid_queue=${eduid_queue-$eduid_name}
 eduid_entrypoint=${eduid_entrypoint-"eduid.workers.${eduid_name}.worker"}
+extra_sources_dir=${extra_sources_dir-"${base_dir}/sources"}
 # These *can* be set from Puppet, but are less expected to...
 log_dir=${log_dir-'/var/log/eduid'}
 logfile=${logfile-"${log_dir}/${eduid_name}.log"}
@@ -33,6 +34,12 @@ test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
 export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
+
+if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
+    echo ""
+    echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    /opt/eduid/worken/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+fi
 
 # this is a Python module name, so can't have hyphen
 eduid_entrypoint=$(echo "${eduid_entrypoint}" | tr '-' '_')
