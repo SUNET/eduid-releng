@@ -76,7 +76,7 @@ case "${eduid_name}" in
 	    # Metadata generation, if it does not exist already
 	    if [ ! -s "${metadata}" ]; then
 		cd "$(dirname "${saml2_settings}")"
-		/opt/eduid/webapp/bin/make_metadata.py "${saml2_settings}" | \
+		/opt/eduid/webapp/bin/make_metadata "${saml2_settings}" | \
 		    xmllint --format - > "${metadata}"
 	    fi
 	fi
