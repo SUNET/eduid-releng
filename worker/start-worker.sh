@@ -12,6 +12,7 @@ fi
 . /opt/eduid/worker/bin/activate
 
 # These could be set from Puppet if multiple instances are deployed
+base_dir=${base_dir-'/opt/eduid'}
 eduid_queue=${eduid_queue-$eduid_name}
 eduid_entrypoint=${eduid_entrypoint-"eduid.workers.${eduid_name}.worker"}
 extra_sources_dir=${extra_sources_dir-"${base_dir}/sources"}
