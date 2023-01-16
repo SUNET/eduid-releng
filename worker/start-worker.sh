@@ -39,7 +39,7 @@ export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
     echo ""
     echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
-    /opt/eduid/worken/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    /opt/eduid/worker/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
 fi
 
 # this is a Python module name, so can't have hyphen
