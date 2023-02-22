@@ -41,7 +41,7 @@ EXPOSE 8080
 
 ADD start-fastapi.sh /start-fastapi.sh
 
-HEALTHCHECK --interval=27s CMD curl http://localhost:8080/status/healthy | grep -q STATUS_OK
+HEALTHCHECK --interval=27s CMD curl --max-time 20 http://localhost:8080/status/healthy | grep -q STATUS_OK
 
 ENTRYPOINT [ "/bin/bash"]
 
