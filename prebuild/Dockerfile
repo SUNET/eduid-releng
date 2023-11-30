@@ -6,6 +6,7 @@ RUN apt-get update && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
       build-essential \
+      libcairo2-dev \
       libffi-dev \
       libfreetype-dev \
       libjpeg-dev \
