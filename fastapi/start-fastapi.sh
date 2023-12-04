@@ -30,6 +30,9 @@ worker_threads=${worker_threads-1}
 worker_timeout=${worker_timeout-30}
 # Need to tell Gunicorn to trust the X-Forwarded-* headers
 forwarded_allow_ips=${forwarded_allow_ips-'*'}
+# if request line needs to be extended, most likely for a SAML request.
+# Value is a number from 0 (unlimited) to 8190.
+limit_request_line=${limit_request_line-'4094'}
 
 test -d "${log_dir}" && chown -R eduid: "${log_dir}"
 test -d "${state_dir}" && chown -R eduid: "${state_dir}"
@@ -76,6 +79,7 @@ exec start-stop-daemon --start -c eduid:eduid --exec \
      --workers "${workers}" --worker-class "${worker_class}" \
      --threads "${worker_threads}" --timeout "${worker_timeout}" \
      --forwarded-allow-ips="${forwarded_allow_ips}" \
+     --limit-request-line="${limit_request_line}" \
      --access-logfile "${log_dir}/${eduid_name}-access.log" \
      --error-logfile "${log_dir}/${eduid_name}-error.log" \
      --capture-output \
