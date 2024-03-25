@@ -24,9 +24,9 @@ extra_sources_dir=${extra_sources_dir-"${base_dir}/sources"}
 # These *can* be set from Puppet, but are less expected to...
 log_dir=${log_dir-'/var/log/eduid'}
 state_dir=${state_dir-"${base_dir}/run"}
-workers=${workers-4}
+workers=${workers-2}
 worker_class=${worker_class-"uvicorn.workers.UvicornWorker"}
-worker_threads=${worker_threads-1}
+worker_threads=${worker_threads-5}
 worker_timeout=${worker_timeout-30}
 # Need to tell Gunicorn to trust the X-Forwarded-* headers
 forwarded_allow_ips=${forwarded_allow_ips-'*'}
