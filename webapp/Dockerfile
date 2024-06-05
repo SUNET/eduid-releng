@@ -33,8 +33,11 @@ RUN apt-get update && \
       procps \
       python3-distutils \
       python3-minimal \
-      xmlsec1 \
+      #xmlsec1 \
       zlib1g-dev \
+      # for xmlsec source build
+      libxslt1.1 \
+      libltdl7 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log/eduid
@@ -44,6 +47,12 @@ RUN mkdir -p /opt/eduid
 COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
 COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
 COPY --from=build /opt/eduid/webapp /opt/eduid/webapp
+COPY --from=build /usr/local/bin/xmlsec1 /usr/local/bin/xmlsec1
+RUN ln -s /usr/local/bin/xmlsec1 /usr/bin/xmlsec1
+COPY --from=build /usr/local/lib/libxmlsec1* /usr/local/lib/.
+# ldconfig will complain that there are no symlinks where expected
+# this is due to docker COPY resolving those symlinks
+RUN /usr/sbin/ldconfig
 
 WORKDIR /opt/eduid
 
