@@ -8,10 +8,10 @@ STAGINGTAG?=	staging
 PRODTAG?=	production
 MAINBRANCH=	origin/main
 BRANCH?=	$(MAINBRANCH)
-SUBMODULES=	eduid-backend
-DOCKERS=        webapp worker satosa_scim fastapi admintools
+SUBMODULES=	eduid-backend eduid-html eduid-front eduid-managed-accounts
+DOCKERS=	webapp worker satosa_scim fastapi admintools html
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
-VERSION?=       $(DATETIME)
+VERSION?=	$(DATETIME)
 
 all:
 	$(info --- INFO: eduID release engineering ---)
@@ -33,7 +33,7 @@ update_what_to_build: build_prep
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
-	git commit -m "updated eduid-releng submodule to branch ${BRANCH}" build/repos/eduid-backend
+	for mod in $(SUBMODULES); do git commit -m "updated submodule $${mod} to branch $${BRANCH}" build/repos/$${mod}; done
 
 deinit_submodules:
 	cd ${REPOS} && for mod in $(SUBMODULES); do git submodule deinit -f $${mod}; done
@@ -69,6 +69,9 @@ fastapi:
 admintools:
 	cd admintools && make VERSION=$(VERSION) docker
 
+html:
+	cd html && make VERSION=$(VERSION) docker
+
 dockers: build $(DOCKERS)
 
 dockers_tagpush:
@@ -77,6 +80,7 @@ dockers_tagpush:
 	cd satosa_scim && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd fastapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	cd admintools && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd html && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	@echo ""
 	@echo "--- INFO: eduID release engineering ---"
 	@echo "---"
@@ -95,6 +99,7 @@ staging_release:
 	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 	cd fastapi && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 	cd admintools && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd html && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 
 production_release:
 	cd webapp && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
@@ -102,5 +107,6 @@ production_release:
 	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd fastapi && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd admintools && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
 .PHONY: prebuild build $(DOCKERS) staging_release production_release

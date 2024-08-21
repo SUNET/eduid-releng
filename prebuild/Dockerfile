@@ -15,6 +15,7 @@ RUN apt-get update && \
       libxml2-dev \
       libxml2-utils \
       libxslt1-dev \
+      npm \
       pkg-config \
       python3-cffi \
       python3-dev \
