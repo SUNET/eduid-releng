@@ -1,6 +1,9 @@
 ARG VERSION
 FROM eduid-build:$VERSION AS build
 
+RUN cat /build/submodules.txt
+
+
 FROM debian:stable
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -22,6 +25,11 @@ RUN apt-get update && \
       netcat-openbsd \
       procps \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# add revisions for upstream projects
+COPY --from=build /build/sources/eduid-html/revision.txt /revision-html.txt
+COPY --from=build /build/sources/eduid-front/revision.txt /revision-front.txt
+COPY --from=build /build/sources/eduid-managed-accounts/revision.txt /revision-managed-accounts.txt
 
 # setup nginx to run in fg
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
