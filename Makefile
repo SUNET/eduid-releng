@@ -33,7 +33,7 @@ update_what_to_build: build_prep
 	git submodule foreach "git fetch origin"
 	git submodule foreach "git checkout ${BRANCH}"
 	git submodule foreach "git show --summary"
-	for mod in $(SUBMODULES); do git commit -m "updated submodule $${mod} to branch $${BRANCH}" build/repos/$${mod}; done
+	for mod in $(SUBMODULES); do git commit -m "updated submodule $${mod} to branch ${BRANCH}" build/repos/$${mod} || true; done
 
 deinit_submodules:
 	cd ${REPOS} && for mod in $(SUBMODULES); do git submodule deinit -f $${mod}; done
