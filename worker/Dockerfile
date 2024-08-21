@@ -6,7 +6,7 @@ RUN cat /build/submodules.txt
 
 FROM debian:stable
 
-env DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 
 # Add user/group before installing any packages to get consistent uid/gid
 RUN addgroup --system eduid && adduser --system --shell /bin/false --ingroup eduid eduid
