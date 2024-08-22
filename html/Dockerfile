@@ -40,6 +40,9 @@ RUN rm -f /etc/nginx/sites-enabled/*
 # Copy nginx config from eduid-html repo
 COPY --from=build /build/sources/eduid-html/docker/html.conf /etc/nginx/sites-enabled/html.conf
 
+# Copy a blank index.html to /opt/eduid/www for health checks
+COPY --from=build /build/sources/eduid-html/index.html /opt/eduid/www/index.html
+
 # Copy react apps and other webapp dependencies to /opt/eduid/static/
 COPY --from=build /build/sources/eduid-html/static /opt/eduid/static/
 COPY --from=build /opt/eduid/eduid-front /opt/eduid/eduid-front/
