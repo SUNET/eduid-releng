@@ -47,7 +47,7 @@ COPY --from=build /opt/eduid/eduid-managed-accounts /opt/eduid/eduid-managed-acc
 
 ADD start-html.sh /start-html.sh
 
-HEALTHCHECK --interval=27s CMD wget -O /dev/null http://localhost || exit 1
+HEALTHCHECK --interval=27s CMD curl --max-time 3 --silent --output /dev/null http://localhost || exit 1
 
 ENTRYPOINT [ "/bin/bash"]
 
