@@ -1,0 +1,9 @@
+Patches for satosa skolverket proxy optimization
+
+Changes:
+sigver.py - remove half the subproccess calls by hardcoding xmlsec1 version
+state.py  - change lzma to zlib for cookie compression
+
+Should be mounted to:
+sigver.py -> /opt/eduid/satosa_scim/lib/python3.11/site-packages/saml2/sigver.py
+state.py  -> /opt/eduid/satosa_scim/lib/python3.11/site-packages/satosa/state.py
