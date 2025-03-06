@@ -37,6 +37,7 @@ RUN mkdir -p /opt/eduid
 COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
 COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
 COPY --from=build /opt/eduid/satosa_scim /opt/eduid/satosa_scim
+COPY ./patches/ /opt/eduid/satosa_patches
 
 WORKDIR /opt/eduid
 
