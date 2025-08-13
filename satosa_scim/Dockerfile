@@ -26,7 +26,6 @@ RUN apt-get update && \
       netcat-openbsd \
       procps \
       python3-minimal \
-      python3-distutils \
       xmlsec1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

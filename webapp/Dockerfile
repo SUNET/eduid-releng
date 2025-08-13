@@ -31,7 +31,6 @@ RUN apt-get update && \
       net-tools \
       netcat-openbsd \
       procps \
-      python3-distutils \
       python3-minimal \
       xmlsec1 \
       zlib1g-dev \

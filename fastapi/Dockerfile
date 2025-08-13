@@ -24,7 +24,6 @@ RUN apt-get update && \
       netcat-openbsd \
       procps \
       python3-minimal \
-      python3-distutils \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log/eduid
