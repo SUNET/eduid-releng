@@ -80,6 +80,7 @@ exec start-stop-daemon --start -c eduid:eduid --exec \
      --threads "${worker_threads}" --timeout "${worker_timeout}" \
      --forwarded-allow-ips="${forwarded_allow_ips}" \
      --limit-request-line="${limit_request_line}" \
+     --control-socket "${state_dir}/${eduid_name}.ctl" \
      --access-logfile "${log_dir}/${eduid_name}-access.log" \
      --error-logfile "${log_dir}/${eduid_name}-error.log" \
      --capture-output \
