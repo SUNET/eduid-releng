@@ -21,4 +21,4 @@ jobs:
           username: ci-sunet-eduid
           password: ${{ secrets.CI_SUNET_EDUID }}
       - name: Build and Push
-        run: make docker_tagpush REGISTRY=platform.sunet.se
+        run: make dockers dockers_tagpush REGISTRY=platform.sunet.se
