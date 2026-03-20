@@ -3,5 +3,5 @@ git:
 slack:
   room: "eduid-builds"
 script:
-  - make dockers dockers_tagpush
+  - make dockers dockers_tagpush REGISTRY=docker.sunet.se
 clean_workspace: false

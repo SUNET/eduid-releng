@@ -1,4 +1,5 @@
-DOCKERIMAGE?=	docker.sunet.se/eduid/webapp
+REGISTRY?=	docker.sunet.se
+DOCKERIMAGE?=	$(REGISTRY)/eduid/webapp
 
 docker:
 	test -n '$(VERSION)' || exit 1

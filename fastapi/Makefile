@@ -1,4 +1,5 @@
-DOCKERIMAGE?=	docker.sunet.se/eduid/fastapi
+REGISTRY?=	docker.sunet.se
+DOCKERIMAGE?=	$(REGISTRY)/eduid/fastapi
 
 docker:
 	test -n '$(VERSION)' || exit 1

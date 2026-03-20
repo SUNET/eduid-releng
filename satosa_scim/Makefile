@@ -1,4 +1,5 @@
-DOCKERIMAGE?=	docker.sunet.se/eduid/satosa_scim
+REGISTRY?=	docker.sunet.se
+DOCKERIMAGE?=	$(REGISTRY)/eduid/satosa_scim
 
 docker:
 	test -n '$(VERSION)' || exit 1
