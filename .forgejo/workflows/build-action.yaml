@@ -20,5 +20,10 @@ jobs:
           registry: platform.sunet.se
           username: ci-sunet-eduid
           password: ${{ secrets.CI_SUNET_EDUID }}
+      - name: Check available builders
+        run: docker buildx ls
       - name: Build and Push
+        env:
+          # do not use buildx that defaults to docker-container
+          DOCKER_BUILDKIT: "0"
         run: make dockers dockers_tagpush REGISTRY=platform.sunet.se
