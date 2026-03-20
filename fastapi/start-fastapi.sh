@@ -71,6 +71,7 @@ if [[ $EDUID_CONFIG_NS ]]; then
     echo "Reading settings from: ${EDUID_CONFIG_NS}"
 fi
 
+# --no-control-socket set until https://github.com/benoitc/gunicorn/pull/3520 reaches release
 exec start-stop-daemon --start -c eduid:eduid --exec \
      /opt/eduid/fastapi/bin/gunicorn \
      --pidfile "${state_dir}/${eduid_name}.pid" \
@@ -80,6 +81,7 @@ exec start-stop-daemon --start -c eduid:eduid --exec \
      --threads "${worker_threads}" --timeout "${worker_timeout}" \
      --forwarded-allow-ips="${forwarded_allow_ips}" \
      --limit-request-line="${limit_request_line}" \
+     --no-control-socket \
      --control-socket "${state_dir}/${eduid_name}.ctl" \
      --access-logfile "${log_dir}/${eduid_name}-access.log" \
      --error-logfile "${log_dir}/${eduid_name}-error.log" \
