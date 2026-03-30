@@ -1,4 +1,4 @@
-REGISTRY?=	docker.sunet.se
+REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/html
 
 docker:

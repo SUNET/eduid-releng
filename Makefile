@@ -88,7 +88,7 @@ dockers_tagpush:
 	@echo "---"
 	@echo "---  Probable next step:"
 	@echo "---"
-	@echo "---    make VERSION=$(VERSION) staging_release"
+	@echo "---    make VERSION=$(VERSION) REGISTRY=$(REGISTRY) staging_release"
 	@echo "---"
 	@echo "---  in the eduid-releng repository"
 	@echo "---"
