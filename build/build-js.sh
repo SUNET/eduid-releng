@@ -11,8 +11,14 @@ fi
 banner "${NAME}"
 
 cd "/build/sources/${NAME}"
-npm i --package-lock-only
-npm install
+
+if [[ ! -f package-lock.json ]]; then
+    echo "$0: /build/sources/${NAME}/package-lock.json is missing"
+    echo "$0: release builds require a committed package-lock.json"
+    exit 1
+fi
+
+npm ci --no-audit --no-fund
 
 # project specific build commands
 if [ "$NAME" == "eduid-front" ]; then
