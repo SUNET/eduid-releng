@@ -44,9 +44,9 @@ COPY --from=build /build/sources/eduid-backend/requirements /tmp/requirements
 
 RUN python3 -mvenv /opt/eduid/fastapi && \
     /opt/eduid/fastapi/bin/pip install --upgrade pip wheel && \
-    /opt/eduid/fastapi/bin/pip install --index-url https://pypi.sunet.se/simple \
+    /opt/eduid/fastapi/bin/pip install --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/fastapi_requirements.txt || \
-    /opt/eduid/fastapi/bin/pip install --index-url https://pypi.sunet.se/simple \
+    /opt/eduid/fastapi/bin/pip install --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/main.txt && \
     rm -rf /tmp/requirements && \
     apt-get purge -y \

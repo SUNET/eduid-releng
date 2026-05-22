@@ -48,8 +48,49 @@ The following work should be completed in `eduid-front` and `eduid-managed-accou
 - Tighten the toolchain contract in `eduid-managed-accounts`, which currently needs a clearer explicit Node/npm version policy.
 - Verify that the same locked inputs produce identical frontend build outputs across repeated runs in CI.
 
+## Backend Scope
+
+The Python part of the releng build currently centers on the backend dependency lockfiles exported from `eduid-backend` and installed by releng into per-service virtual environments.
+
+The current releng-owned contract is split across these paths:
+
+- `build/setup-venv.sh` creates virtual environments for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`.
+- `build/setup-venv.sh` installs from `build/sources/eduid-backend/requirements/${NAME}_requirements.txt` when that file exists, or falls back to `requirements/main.txt`.
+- `eduid-backend/requirements/*.txt` are generated with `uv pip compile --generate-hashes`, so the Python dependency graph is version-pinned and hash-pinned at the requirements-file level.
+- `vccs/Dockerfile` currently performs its own separate Python virtualenv creation and dependency installation rather than reusing the shared releng helper.
+
+That means the Python dependency set is substantially better controlled than before, but the full Python build is still not reproducible end-to-end.
+
+## Current Backend Findings
+
+The Python side is only partially reproducible today.
+
+What is already controlled:
+
+- The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
+- Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
+- The releng build consistently installs from those committed lockfiles with `pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
+- The runtime start scripts no longer install optional packages from `dev-extra-modules.txt`, so mounted developer sources do not change the installed Python dependency set at process start.
+
+What is still mutable:
+
+- `build/setup-venv.sh` runs `pip install --upgrade pip wheel`, so the installer toolchain changes over time even when the source tree and requirements files do not.
+- `vccs/Dockerfile` duplicates the same mutable pattern by creating a virtualenv and upgrading `pip` and `wheel` during its own image build path.
+
+The result is that repeated builds from the same git revisions can still produce different Python environments because the Python installer toolchain is not fully fixed. The broader container base image and apt package drift is a separate repo-wide issue covered below.
+
 ## TODO: Backend
 
-This section is intentionally left as a placeholder for the backend reproducibility work.
+The following releng work should be completed to make the Python side reproducible in practice rather than only at the lockfile level:
 
-- TODO: document the backend reproducibility requirements after the backend build path is reviewed in the same way as the frontend path.
+- Stop upgrading `pip` and `wheel` to whatever is current at build time; either rely on a pinned base toolchain or install exact tool versions from a reviewed constraint.
+- Consolidate the `vccs` Python install path onto the same reproducibility contract as the other services.
+- Add a focused CI check that rebuilds the Python environment twice from the same inputs and compares the resulting installed package set and image digest-relevant contents.
+
+## TODO: Shared Container Inputs
+
+The following reproducibility work is shared across the repository and should not be treated as a backend-only issue:
+
+- Pin container base images by digest rather than floating tags such as `debian:stable`.
+- Replace floating Debian package resolution with a snapshot or otherwise version-pinned apt input so `dist-upgrade` does not change rebuild results.
+- Review the common build and runtime Dockerfiles so the same container input policy applies consistently across Python and frontend image paths.
