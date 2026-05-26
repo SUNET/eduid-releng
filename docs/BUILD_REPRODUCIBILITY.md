@@ -70,10 +70,10 @@ What is already controlled:
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
 - The releng build consistently installs from those committed lockfiles with `pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
-- The runtime start scripts no longer install optional packages from `dev-extra-modules.txt`, so mounted developer sources do not change the installed Python dependency set at process start.
 
 What is still mutable:
 
+- The runtime start scripts install optional packages from `dev-extra-modules.txt` when mounted developer sources provide that file, so the effective Python dependency set can still change at process start in developer-mode setups.
 - `build/setup-venv.sh` runs `pip install --upgrade pip wheel`, so the installer toolchain changes over time even when the source tree and requirements files do not.
 - `vccs/Dockerfile` duplicates the same mutable pattern by creating a virtualenv and upgrading `pip` and `wheel` during its own image build path.
 

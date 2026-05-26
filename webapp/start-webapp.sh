@@ -37,6 +37,12 @@ test -d "${state_dir}" && chown -R eduid: "${state_dir}"
 export PYTHONPATH=${PYTHONPATH-${project_dir}}
 echo "PYTHONPATH=${PYTHONPATH}"
 
+if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
+    echo ""
+    echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    /opt/eduid/webapp/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+fi
+
 echo ""
 echo "$0: Installed modules:"
 

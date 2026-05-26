@@ -41,6 +41,12 @@ test -d "${state_dir}" && chown -R eduid: "${state_dir}"
 export PYTHONPATH=${PYTHONPATH-${project_dir}}
 echo "PYTHONPATH=${PYTHONPATH}"
 
+if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
+    echo ""
+    echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    /opt/eduid/fastapi/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+fi
+
 # nice to have in docker run output, to check what
 # version of something is actually running.
 /opt/eduid/fastapi/bin/pip freeze
