@@ -1,9 +1,14 @@
-Patches for satosa skolverket proxy optimization
+Performance overlays for the satosa and saml2 packages used by the SATOSA Skolverket proxy
 
 Changes:
 sigver.py - remove half the subproccess calls by hardcoding xmlsec1 version
 state.py  - change lzma to zlib for cookie compression
 
-Should be mounted to:
-sigver.py -> /opt/eduid/satosa_scim/lib/python3.11/site-packages/saml2/sigver.py
-state.py  -> /opt/eduid/satosa_scim/lib/python3.11/site-packages/satosa/state.py
+These files patch installed Python packages in the SATOSA virtualenv:
+sigver.py -> import package saml2 (distribution: pysaml2)
+state.py  -> import package satosa
+
+The SATOSA image now applies them through apply-package-overlays.sh, which:
+- resolves the installed package path using /opt/eduid/satosa_scim/bin/python
+- reads patches/manifest.txt to map import packages to overlay files
+- fails the build if the expected package target file is missing

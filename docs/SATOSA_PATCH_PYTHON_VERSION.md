@@ -2,7 +2,9 @@
 
 ## Overview
 
-The eduID release engineering repository includes performance optimization patches for the SATOSA SCIM proxy service. These patches are applied by directly copying Python source files into the runtime image's virtualenv `site-packages` directory. However, the current patch application mechanism in `satosa_scim/Dockerfile` hardcodes Python 3.11 paths, creating a brittle dependency that breaks when building with different Python minor versions.
+The eduID release engineering repository includes performance optimization patches for the SATOSA SCIM proxy service. The original implementation copied files directly into a hardcoded `python3.11` virtualenv path in `satosa_scim/Dockerfile`, which made image assembly brittle across backend Python minor-version bumps.
+
+The current implementation resolves installed package paths dynamically using the SATOSA virtualenv interpreter and applies the overlays through a small manifest-driven helper script. This keeps the image structure close to the other runtime images while making the patch step portable across Python minor versions.
 
 ## Current Problem
 
@@ -26,6 +28,18 @@ The backend (`eduid-backend`) now declares `requires-python = "==3.13.*"` in its
 This is a critical incompatibility between:
 - **releng's assumption**: Python 3.11 paths
 - **backend's requirement**: Python 3.13.x
+
+## Implemented Fix
+
+The SATOSA image now applies the patches as Python package overlays instead of hardcoded path copies:
+
+- `satosa_scim/Dockerfile` copies the prebuilt virtualenv like the other images and runs a single helper step
+- `satosa_scim/apply-package-overlays.sh` resolves package locations using `/opt/eduid/satosa_scim/bin/python`
+- `satosa_scim/patches/manifest.txt` maps import packages to overlay files
+- `state.py` overlays the `satosa` package
+- `sigver.py` overlays the `saml2` import package from the `pysaml2` distribution
+
+This makes the patch step independent of `lib/pythonX.Y/` layout details and gives releng a reusable seam for future shared image helpers.
 
 ## Patch Details
 
@@ -141,12 +155,12 @@ This creates a version contract mismatch:
 
 ## Testing Recommendations
 
-When implementing the dynamic path resolution:
+For the manifest-driven package overlay approach:
 
 1. **Test with Python 3.11**: Verify patches still apply correctly
 2. **Test with Python 3.13**: Verify dynamic resolution works (new behavior)
 3. **Build satosa_scim image**: Run `make satosa_scim` or equivalent
-4. **Inspect runtime image**: Verify patches are in correct site-packages location
+4. **Inspect runtime image**: Verify the helper patched the resolved `satosa` and `saml2` package files
 5. **Functional test**: Verify SATOSA service starts and can handle SCIM requests
 
 ## Related Issues
@@ -169,6 +183,7 @@ When implementing the dynamic path resolution:
 | 2025-03-04 | Performance optimizations documented in satosa_scim/patches/README |
 | 2026-05-26 | Backend reproducibility work declares `requires-python = "==3.13.*"` |
 | 2026-05-26 | Issue discovered: hardcoded paths now incompatible with Python 3.13 |
+| 2026-05-27 | SATOSA image changed to manifest-driven package overlays with dynamic package-path resolution |
 
 ## Appendix: Patch Implementation Details
 
@@ -215,6 +230,6 @@ Both are valid compression; zlib is faster for typical SATOSA state object sizes
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: May 26, 2026  
-**Status**: Active Issue (hardcoded paths incompatible with Python 3.13)
+**Document Version**: 1.1  
+**Last Updated**: May 27, 2026  
+**Status**: Resolved in current branch via manifest-driven package overlays
