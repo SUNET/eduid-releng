@@ -44,12 +44,12 @@ echo "PYTHONPATH=${PYTHONPATH}"
 if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
     echo ""
     echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
-    /opt/eduid/fastapi/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    uv pip install --python /opt/eduid/fastapi/bin/python -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
 fi
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-/opt/eduid/fastapi/bin/pip freeze
+uv pip freeze --python /opt/eduid/fastapi/bin/python
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 

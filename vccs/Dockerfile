@@ -40,13 +40,13 @@ RUN mkdir -p /opt/eduid
 
 COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
 COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
+COPY --from=build /usr/local/bin/uv /usr/local/bin/uv
 COPY --from=build /build/sources/eduid-backend/requirements /tmp/requirements
 
-RUN python3 -mvenv /opt/eduid/fastapi && \
-    /opt/eduid/fastapi/bin/pip install --upgrade pip wheel && \
-    /opt/eduid/fastapi/bin/pip install --require-hashes --index-url https://pypi.sunet.se/simple \
+RUN uv venv /opt/eduid/fastapi && \
+    uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/fastapi_requirements.txt || \
-    /opt/eduid/fastapi/bin/pip install --require-hashes --index-url https://pypi.sunet.se/simple \
+    uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/main.txt && \
     rm -rf /tmp/requirements && \
     apt-get purge -y \

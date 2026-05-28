@@ -30,7 +30,7 @@ chmod 640 "${logfile}"
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-/opt/eduid/worker/bin/pip freeze
+uv pip freeze --python /opt/eduid/worker/bin/python
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
@@ -39,7 +39,7 @@ export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
     echo ""
     echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
-    /opt/eduid/worker/bin/pip install -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    uv pip install --python /opt/eduid/worker/bin/python -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
 fi
 
 # this is a Python module name, so can't have hyphen

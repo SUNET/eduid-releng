@@ -30,6 +30,7 @@ RUN mkdir -p /opt/eduid
 
 COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
 COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
+COPY --from=build /usr/local/bin/uv /usr/local/bin/uv
 COPY --from=build /opt/eduid/worker /opt/eduid/worker
 
 ADD start-worker.sh /start-worker.sh

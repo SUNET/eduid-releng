@@ -42,7 +42,7 @@ echo "PYTHONPATH=${PYTHONPATH}"
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-/opt/eduid/satosa_scim/bin/pip freeze
+uv pip freeze --python /opt/eduid/satosa_scim/bin/python
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
