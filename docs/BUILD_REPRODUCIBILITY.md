@@ -69,28 +69,31 @@ What is already controlled:
 
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
-- The releng build consistently installs from those committed lockfiles with `pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
+- The releng build consistently installs from those committed lockfiles with pinned `uv` and `uv pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
+- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` pin from `releng-tool-versions.mk` rather than hardcoding `debian:stable` in each file.
+- `vccs` now sources its reviewed `LUNA_IMAGE_VERSION` tag from `releng-tool-versions.mk` instead of a root `Makefile` default.
+- Releng exposes `make show-releng-tool-versions`, `make check-releng-tool-versions`, and `make update-releng-tool-versions` so the Debian release pin, the Luna client tag, and the `uv` release tuple can be reviewed against upstream before they are changed.
 
 What is still mutable:
 
 - The runtime start scripts install optional packages from `dev-extra-modules.txt` when mounted developer sources provide that file, so the effective Python dependency set can still change at process start in developer-mode setups.
-- `build/setup-venv.sh` runs `pip install --upgrade pip wheel`, so the installer toolchain changes over time even when the source tree and requirements files do not.
-- `vccs/Dockerfile` duplicates the same mutable pattern by creating a virtualenv and upgrading `pip` and `wheel` during its own image build path.
+- `vccs/Dockerfile` still maintains its own separate Python install path instead of reusing the shared helper, and it still falls back from `fastapi_requirements.txt` to `main.txt` if the first install fails.
+- Debian package resolution is still mutable because the Dockerfiles continue to run `apt-get update`, `apt-get dist-upgrade`, and package installs against whatever the configured Debian mirrors serve at build time.
 
-The result is that repeated builds from the same git revisions can still produce different Python environments because the Python installer toolchain is not fully fixed. The broader container base image and apt package drift is a separate repo-wide issue covered below.
+The result is that repeated builds from the same git revisions can still produce different Python environments because the Debian package layer is not yet fixed and `vccs` still has a divergent dependency-install path. The broader container package drift remains a separate repo-wide issue covered below.
 
 ## TODO: Backend
 
 The following releng work should be completed to make the Python side reproducible in practice rather than only at the lockfile level:
 
-- Stop upgrading `pip` and `wheel` to whatever is current at build time; either rely on a pinned base toolchain or install exact tool versions from a reviewed constraint.
 - Consolidate the `vccs` Python install path onto the same reproducibility contract as the other services.
+- Remove the `fastapi_requirements.txt || main.txt` fallback in `vccs/Dockerfile` so dependency failures stop the build instead of producing a degraded image.
 - Add a focused CI check that rebuilds the Python environment twice from the same inputs and compares the resulting installed package set and image digest-relevant contents.
 
 ## TODO: Shared Container Inputs
 
 The following reproducibility work is shared across the repository and should not be treated as a backend-only issue:
 
-- Pin container base images by digest rather than floating tags such as `debian:stable`.
+- Tighten the current Debian base-image pin from a reviewed release name to a digest or equally immutable image reference.
 - Replace floating Debian package resolution with a snapshot or otherwise version-pinned apt input so `dist-upgrade` does not change rebuild results.
 - Review the common build and runtime Dockerfiles so the same container input policy applies consistently across Python and frontend image paths.

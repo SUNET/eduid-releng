@@ -1,5 +1,14 @@
-# Releng-owned pins for external build tools.
+# Releng-owned version pins.
 
+# Debian base image pin used by releng-owned Debian-based Dockerfiles.
+# Keep this aligned with the Python/runtime expectations of the current build.
+DEBIAN_VERSION := trixie
+
+# Luna client image tag used by the separate vccs runtime build path.
+# Keep this aligned with the reviewed runtime contract for the Luna-backed image.
+LUNA_IMAGE_VERSION := 10.9.0-0.0.2
+
+# uv release pin used by the prebuild image and shared Python build path.
 # Update these from https://github.com/astral-sh/uv/releases:
 # - UV_VERSION: release tag
 # - UV_RELEASE_ASSET: matching Linux tarball asset name

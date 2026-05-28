@@ -27,6 +27,7 @@ The following Docker images are built:
 | `satosa_scim` | SATOSA SCIM integration |
 | `admintools` | Administrative tools |
 | `html` | Static HTML content |
+| `vccs` | VCCS image with separate Luna-backed runtime path |
 
 ## Usage
 
@@ -51,7 +52,26 @@ make VERSION=20260115T120000 dockers
 make webapp
 make worker
 make fastapi
+make vccs
 ```
+
+### Releng Version Pins
+
+The repository keeps releng-owned version pins in `releng-tool-versions.mk`.
+
+You can inspect and refresh them with:
+
+```bash
+make show-releng-tool-versions
+make check-releng-tool-versions
+make update-releng-tool-versions
+```
+
+The current helper checks:
+
+- `DEBIAN_VERSION` against Debian `stable`'s current codename
+- `LUNA_IMAGE_VERSION` against the latest stable numeric `luna-client` tag in `docker.sunet.se`
+- the pinned `uv` release version, asset, and checksum
 
 ### Release Workflow
 
@@ -93,6 +113,7 @@ make dockers
 
 ```
 ├── Makefile          # Main build orchestration
+├── releng-tool-versions.mk # Reviewed Debian, Luna, and uv pins used by releng
 ├── prebuild/         # Base image with common dependencies
 ├── build/            # Build image and source export
 │   └── repos/        # Git submodules
@@ -106,4 +127,6 @@ make dockers
 
 ## Docker Registry
 
-Images are pushed to `docker.sunet.se/eduid/`.
+The service Makefiles default to `platform.sunet.se/eduid/<image>`.
+
+The active Forgejo workflow also publishes with `REGISTRY=platform.sunet.se`.

@@ -9,7 +9,6 @@ SUBMODULES=	eduid-backend eduid-html eduid-front eduid-managed-accounts
 DOCKERS=	webapp worker satosa_scim fastapi admintools html vccs
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=	$(DATETIME)
-LUNA_IMAGE_VERSION?=	10.9.0-0.0.2
 
 all:
 	$(info --- INFO: eduID release engineering ---)
@@ -22,15 +21,17 @@ all:
 
 show-releng-tool-versions:
 	@echo "Releng build tool versions"
+	@echo "  debian:      $(DEBIAN_VERSION)"
+	@echo "  luna image:  $(LUNA_IMAGE_VERSION)"
 	@echo "  uv version: $(UV_VERSION)"
 	@echo "  uv asset:   $(UV_RELEASE_ASSET)"
 	@echo "  uv sha256:  $(UV_RELEASE_SHA256)"
 
 check-releng-tool-versions:
-	./scripts/update-releng-tool-versions.sh check
+	bash ./scripts/update-releng-tool-versions.sh check
 
 update-releng-tool-versions:
-	./scripts/update-releng-tool-versions.sh update
+	bash ./scripts/update-releng-tool-versions.sh update
 
 build_prep:
 	git submodule update --init

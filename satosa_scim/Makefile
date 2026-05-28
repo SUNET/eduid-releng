@@ -1,9 +1,11 @@
+include ../releng-tool-versions.mk
+
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/satosa_scim
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-satosa_scim:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --tag "eduid-satosa_scim:$(VERSION)" .
 	docker tag "eduid-satosa_scim:$(VERSION)" "eduid-satosa_scim:latest"
 
 docker_tagpush:

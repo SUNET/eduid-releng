@@ -165,7 +165,7 @@ For the manifest-driven package overlay approach:
 
 ## Related Issues
 
-- **build/setup-venv.sh**: Lines 13-14 run `pip install --upgrade pip wheel` (mutable toolchain)
+- **build/setup-venv.sh**: The shared releng build now uses pinned `uv` plus `uv pip install --require-hashes`, so the old mutable `pip install --upgrade pip wheel` issue no longer applies to the main shared build path
 - **vccs/Dockerfile**: Duplicates venv creation instead of using shared helper
 - **General reproducibility**: No validation of Python minor version parity between releng and backend
 
