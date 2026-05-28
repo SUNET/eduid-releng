@@ -1,7 +1,5 @@
 REPOS=		${CURDIR}/build/repos
 SOURCES=	${CURDIR}/sources
-WHEELS=		${CURDIR}/wheels
-INDEX=		$(WHEELS)/simple
 VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 TAGSUFFIX?=	testing
 STAGINGTAG?=	staging
