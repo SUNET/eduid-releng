@@ -1,6 +1,4 @@
 REPOS=		${CURDIR}/build/repos
-SOURCES=	${CURDIR}/sources
-VENV?=		"${HOME}/.virtualenvs/eduid-releng"
 TAGSUFFIX?=	testing
 STAGINGTAG?=	staging
 PRODTAG?=	production

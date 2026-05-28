@@ -1,7 +1,5 @@
 REPOS=		${CURDIR}/repos
 SOURCES=	${CURDIR}/sources
-VENV?=		"${HOME}/.virtualenvs/eduid-releng"
-BRANCH=		ft-piptools_requirements
 
 all:
 	$(info --- INFO: Run 'make install' or 'make docker' ---)
