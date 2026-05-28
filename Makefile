@@ -1,4 +1,5 @@
 REPOS=		${CURDIR}/build/repos
+include releng-tool-versions.mk
 TAGSUFFIX?=	testing
 STAGINGTAG?=	staging
 PRODTAG?=	production
@@ -18,6 +19,18 @@ all:
 	$(info ---         update_what_to_build: Update what code will be built to the upstream branch $(BRANCH) ---)
 	$(info ---         dockers:              Build docker images $(DOCKERS) ---)
 	$(info ---)
+
+show-releng-tool-versions:
+	@echo "Releng build tool versions"
+	@echo "  uv version: $(UV_VERSION)"
+	@echo "  uv asset:   $(UV_RELEASE_ASSET)"
+	@echo "  uv sha256:  $(UV_RELEASE_SHA256)"
+
+check-releng-tool-versions:
+	./scripts/update-releng-tool-versions.sh check
+
+update-releng-tool-versions:
+	./scripts/update-releng-tool-versions.sh update
 
 build_prep:
 	git submodule update --init
@@ -45,7 +58,10 @@ clean:
 real_clean: clean init_submodules
 
 prebuild:
-	cd prebuild && make docker
+	cd prebuild && make docker \
+	  UV_VERSION="$(UV_VERSION)" \
+	  UV_RELEASE_ASSET="$(UV_RELEASE_ASSET)" \
+	  UV_RELEASE_SHA256="$(UV_RELEASE_SHA256)"
 
 build: build_prep prebuild
 	git submodule status > build/submodules.txt
@@ -112,4 +128,4 @@ production_release:
 	cd html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd vccs && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
-.PHONY: prebuild build $(DOCKERS) staging_release production_release
+.PHONY: show-releng-tool-versions check-releng-tool-versions update-releng-tool-versions prebuild build $(DOCKERS) staging_release production_release
