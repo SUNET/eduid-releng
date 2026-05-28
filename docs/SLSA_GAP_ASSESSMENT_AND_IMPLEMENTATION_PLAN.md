@@ -52,7 +52,7 @@ The repository already has several good foundations.
 - The top-level `Makefile` records submodule state in `build/submodules.txt` during builds.
 - Frontend release builds now rely on committed lockfiles and `npm ci`.
 - Backend Python requirements are hash-locked upstream and installed with `--require-hashes`.
-- `versions.mk` already pins the `uv` release asset and checksum, showing the repo is willing to treat toolchain inputs as reviewed supply-chain inputs.
+- `releng-tool-versions.mk` already pins the `uv` release asset and checksum, showing the repo is willing to treat toolchain inputs as reviewed supply-chain inputs.
 
 ### Existing weaknesses
 
@@ -246,7 +246,7 @@ Changes:
    - submodule revisions
    - image names and digests
    - version string
-   - toolchain pins from `versions.mk`
+   - toolchain pins from `releng-tool-versions.mk`
    - lockfile identities or hashes where relevant
 
 4. Preserve the existing human-readable provenance breadcrumbs.
