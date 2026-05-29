@@ -45,6 +45,11 @@ Agents must not make manual edits under `build/sources/`.
 
 If the exported content is wrong, fix the source repository or the export logic in `build/Makefile` instead.
 
+When a user points out a problem in `build/repos/` or `build/sources/`, do not patch those files in `eduid-releng` as a shortcut.
+
+- For `build/repos/*`, make the fix in the owning upstream repository and treat it as submodule work.
+- For `build/sources/*`, regenerate the export with `make -C build update` after fixing the source repository or export logic.
+
 ## Key Build Entry Points
 
 The main commands and files in this repository are:
@@ -86,6 +91,7 @@ Agents should keep changes narrowly scoped to the releng problem being solved.
 - Do not edit unrelated notes or analysis documents unless the task explicitly calls for it.
 - Do not rewrite generated files to match preferred formatting.
 - Do not convert a submodule change into a releng-only change by editing exported sources.
+- Do not fix upstream repository issues by editing files under `build/repos/*` from this repository checkout.
 
 ## Documentation Guidance
 
