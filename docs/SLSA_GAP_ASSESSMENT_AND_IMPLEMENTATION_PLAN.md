@@ -52,7 +52,7 @@ The repository already has several good foundations.
 - The top-level `Makefile` records submodule state in `build/submodules.txt` during builds.
 - Frontend release builds now rely on committed lockfiles and `npm ci`.
 - Backend Python requirements are hash-locked upstream and installed with `--require-hashes`.
-- `build-toolchain-versions.mk` now pins the `uv` release asset and checksum, `base-image-versions.mk` pins the Debian release used by Debian-based images, and `runtime-image-versions.mk` pins the Luna client tag used by `vccs`, showing the repo is willing to treat build inputs, shared platform bases, and service-specific runtime bases as reviewed supply-chain inputs.
+- `versions/build-toolchain.mk` now pins the `uv` release asset and checksum, `versions/base-images.mk` pins the Debian release used by Debian-based images, and `versions/runtime-images.mk` pins the Luna client tag used by `vccs`, showing the repo is willing to treat build inputs, shared platform bases, and service-specific runtime bases as reviewed supply-chain inputs.
 
 ### Existing weaknesses
 
@@ -246,9 +246,9 @@ Changes:
    - submodule revisions
    - image names and digests
    - version string
-   - build toolchain pins from `build-toolchain-versions.mk`
-   - shared base-image pins from `base-image-versions.mk`
-   - service-specific runtime image pins from `runtime-image-versions.mk`
+   - build toolchain pins from `versions/build-toolchain.mk`
+   - shared base-image pins from `versions/base-images.mk`
+   - service-specific runtime image pins from `versions/runtime-images.mk`
    - lockfile identities or hashes where relevant
 
 4. Preserve the existing human-readable provenance breadcrumbs.

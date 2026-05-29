@@ -23,7 +23,7 @@ In the current releng implementation:
 - `build/Makefile` exports a clean source snapshot into `build/sources/eduid-backend`
 - `build/setup-venv.sh` builds the shared Python virtualenv artifacts for `webapp`, `worker`, `fastapi`, `admintools`, and `satosa_scim`
 - most runtime Dockerfiles copy those prebuilt virtualenvs into the final service image
-- `vccs/Dockerfile` remains a separate runtime-path exception and builds its own virtualenv inside the final image
+- `images/vccs/Dockerfile` remains a separate runtime-path exception and builds its own virtualenv inside the final image
 
 ## Releng Guarantees
 
@@ -39,7 +39,7 @@ For the backend release path, releng currently guarantees all of the following:
 - Releng creates service virtualenvs under `/opt/eduid/<name>` with `uv venv`.
 - Releng installs Python dependencies with `uv pip install --require-hashes` against the SUNET package index.
 - Releng uses the shared helper `build/setup-venv.sh` for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`.
-- Releng pins the shared `uv` tool version in `build-toolchain-versions.mk` and installs that exact release in the prebuild image.
+- Releng pins the shared `uv` tool version in `versions/build-toolchain.mk` and installs that exact release in the prebuild image.
 
 ### Dependency input selection
 
@@ -51,9 +51,9 @@ For the backend release path, releng currently guarantees all of the following:
 ### Runtime assembly
 
 - `webapp`, `worker`, `fastapi`, `admintools`, and `satosa_scim` copy backend source plus a releng-built virtualenv into the runtime image.
-- `satosa_scim` also applies releng-owned overlays from `satosa_scim/patches/`.
-- Releng pins the shared Debian base release name in `base-image-versions.mk` for the Debian-based image paths.
-- Releng pins the reviewed VCCS Luna image tag and digest in `runtime-image-versions.mk` for the separate `vccs` runtime base.
+- `satosa_scim` also applies releng-owned overlays from `images/satosa_scim/patches/`.
+- Releng pins the shared Debian base release name in `versions/base-images.mk` for the Debian-based image paths.
+- Releng pins the reviewed VCCS Luna image tag and digest in `versions/runtime-images.mk` for the separate `vccs` runtime base.
 
 ## Backend Repository Obligations
 
@@ -100,7 +100,7 @@ Before releasing the backend path, confirm all of the following:
 The current repository state still has a few backend contract exceptions that should remain explicit:
 
 - `vccs` builds its virtualenv inside the final runtime image instead of reusing `build/setup-venv.sh`.
-- `vccs/Dockerfile` still falls back from `fastapi_requirements.txt` to `main.txt` if the first install attempt fails.
+- `images/vccs/Dockerfile` still falls back from `fastapi_requirements.txt` to `main.txt` if the first install attempt fails.
 - `webapp`, `worker`, `fastapi`, and the delegated FastAPI startup path in `vccs` support `dev-extra-modules.txt`, which can mutate the Python environment at container startup in developer-mode setups.
 - The Debian package layer is still mutable because the Dockerfiles run `apt-get update` and `apt-get dist-upgrade` against live package mirrors at build time.
 - `admintools` still relies on `main.txt` rather than a dedicated service requirements file.

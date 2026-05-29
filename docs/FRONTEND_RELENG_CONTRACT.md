@@ -19,7 +19,7 @@ In the current releng implementation:
 - the releng repository selects the upstream revisions through submodule pointers under `build/repos/`
 - `build/Makefile` exports clean source snapshots into `build/sources/` with `git archive`
 - `build/build-js.sh` installs dependencies and builds the JavaScript artifacts
-- `html/Dockerfile` assembles the static delivery image by combining `eduid-html` content with the built frontend artifacts
+- `images/html/Dockerfile` assembles the static delivery image by combining `eduid-html` content with the built frontend artifacts
 
 The frontend artifacts are currently shipped through the `html` image. They are not copied into the Python service images.
 

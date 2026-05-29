@@ -1,7 +1,7 @@
 REPOS=		${CURDIR}/build/repos
-include build-toolchain-versions.mk
-include base-image-versions.mk
-include runtime-image-versions.mk
+include versions/build-toolchain.mk
+include versions/base-images.mk
+include versions/runtime-images.mk
 TAGSUFFIX?=	testing
 STAGINGTAG?=	staging
 PRODTAG?=	production
@@ -84,7 +84,7 @@ clean:
 real_clean: clean init_submodules
 
 prebuild:
-	cd prebuild && make docker \
+	cd images/prebuild && make docker \
 	  DEBIAN_DIGEST="$(DEBIAN_DIGEST)" \
 	  UV_VERSION="$(UV_VERSION)" \
 	  UV_RELEASE_ASSET="$(UV_RELEASE_ASSET)" \
@@ -95,36 +95,36 @@ build: build_prep prebuild
 	cd build && make VERSION=$(VERSION) docker
 
 webapp:
-	cd webapp && make VERSION=$(VERSION) docker
+	cd images/webapp && make VERSION=$(VERSION) docker
 
 worker:
-	cd worker && make VERSION=$(VERSION) docker
+	cd images/worker && make VERSION=$(VERSION) docker
 
 satosa_scim:
-	cd satosa_scim && make VERSION=$(VERSION) docker
+	cd images/satosa_scim && make VERSION=$(VERSION) docker
 
 fastapi:
-	cd fastapi && make VERSION=$(VERSION) docker
+	cd images/fastapi && make VERSION=$(VERSION) docker
 
 admintools:
-	cd admintools && make VERSION=$(VERSION) docker
+	cd images/admintools && make VERSION=$(VERSION) docker
 
 html:
-	cd html && make VERSION=$(VERSION) docker
+	cd images/html && make VERSION=$(VERSION) docker
 
 vccs:
-	cd vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) VCCS_LUNA_IMAGE_DIGEST=$(VCCS_LUNA_IMAGE_DIGEST) docker
+	cd images/vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) VCCS_LUNA_IMAGE_DIGEST=$(VCCS_LUNA_IMAGE_DIGEST) docker
 
 dockers: build $(DOCKERS)
 
 dockers_tagpush:
-	cd webapp && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd satosa_scim && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd fastapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd admintools && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd html && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
-	cd vccs && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/webapp && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/worker && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/satosa_scim && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/fastapi && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/admintools && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/html && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
+	cd images/vccs && make VERSION=$(VERSION) TAGSUFFIX=$(TAGSUFFIX) docker_tagpush
 	@echo ""
 	@echo "--- INFO: eduID release engineering ---"
 	@echo "---"
@@ -138,21 +138,21 @@ dockers_tagpush:
 	@echo "---"
 
 staging_release:
-	cd webapp && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd worker && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd fastapi && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd admintools && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd html && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
-	cd vccs && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/webapp && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/worker && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/satosa_scim && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/fastapi && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/admintools && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/html && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
+	cd images/vccs && make VERSION=$(VERSION) SRCTAG=$(TAGSUFFIX) DSTTAG=$(STAGINGTAG) tag_copypush
 
 production_release:
-	cd webapp && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
-	cd worker && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
-	cd satosa_scim && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
-	cd fastapi && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
-	cd admintools && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
-	cd html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
-	cd vccs && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/webapp && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/worker && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/satosa_scim && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/fastapi && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/admintools && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
+	cd images/vccs && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
 .PHONY: show-build-toolchain-versions check-build-toolchain-versions update-build-toolchain-versions show-base-image-versions check-base-image-versions update-base-image-versions show-runtime-image-versions check-runtime-image-versions update-runtime-image-versions prebuild build $(DOCKERS) staging_release production_release

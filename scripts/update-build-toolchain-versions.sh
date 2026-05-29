@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$(cd -- "${script_dir}/.." && pwd)
-versions_file="${repo_root}/build-toolchain-versions.mk"
+versions_file="${repo_root}/versions/build-toolchain.mk"
 
 mode=${1:-check}
 
@@ -25,7 +25,7 @@ if [[ "${builder_arch}" != "x86_64" ]]; then
     exit 2
 fi
 
-# Read the currently reviewed values from build-toolchain-versions.mk.
+# Read the currently reviewed values from versions/build-toolchain.mk.
 current_version=$(awk -F ' := ' '/^UV_VERSION :=/ {print $2}' "${versions_file}")
 current_asset=$(awk -F ' := ' '/^UV_RELEASE_ASSET :=/ {print $2}' "${versions_file}")
 current_sha256=$(awk -F ' := ' '/^UV_RELEASE_SHA256 :=/ {print $2}' "${versions_file}")

@@ -10,14 +10,14 @@ The repository now pins Debian base images by tag plus digest, but the Debian pa
 
 The mutable apt input currently affects these releng-owned Dockerfiles:
 
-- `prebuild/Dockerfile`
-- `webapp/Dockerfile`
-- `worker/Dockerfile`
-- `fastapi/Dockerfile`
-- `satosa_scim/Dockerfile`
-- `admintools/Dockerfile`
-- `html/Dockerfile`
-- `vccs/Dockerfile`
+- `images/prebuild/Dockerfile`
+- `images/webapp/Dockerfile`
+- `images/worker/Dockerfile`
+- `images/fastapi/Dockerfile`
+- `images/satosa_scim/Dockerfile`
+- `images/admintools/Dockerfile`
+- `images/html/Dockerfile`
+- `images/vccs/Dockerfile`
 
 This matters because:
 
@@ -42,7 +42,7 @@ Use `snapshot.debian.org` as the immutable Debian package source of truth.
 
 Recommended initial shape:
 
-- keep the current `DEBIAN_VERSION` and `DEBIAN_DIGEST` pins in `base-image-versions.mk`
+- keep the current `DEBIAN_VERSION` and `DEBIAN_DIGEST` pins in `versions/base-images.mk`
 - add one reviewed snapshot timestamp for shared Debian package inputs
 - only split into separate archive timestamps if one shared timestamp proves operationally unreliable
 
@@ -146,7 +146,7 @@ The recommended path is to accept a small amount of short-term duplication for t
 
 ### Phase 1: Centralize reviewed snapshot inputs
 
-Add Debian package snapshot variables to `base-image-versions.mk`.
+Add Debian package snapshot variables to `versions/base-images.mk`.
 
 Recommended first pass:
 
@@ -180,7 +180,7 @@ The important policy point is that snapshot timestamps should be reviewed inputs
 
 ### Phase 3: Roll out snapshot-backed apt sources in the build path first
 
-Start with `prebuild/Dockerfile`.
+Start with `images/prebuild/Dockerfile`.
 
 Why first:
 
@@ -199,18 +199,18 @@ Changes in this phase:
 
 After `prebuild` is stable, apply the same pattern to:
 
-- `webapp/Dockerfile`
-- `worker/Dockerfile`
-- `fastapi/Dockerfile`
-- `satosa_scim/Dockerfile`
-- `admintools/Dockerfile`
-- `html/Dockerfile`
+- `images/webapp/Dockerfile`
+- `images/worker/Dockerfile`
+- `images/fastapi/Dockerfile`
+- `images/satosa_scim/Dockerfile`
+- `images/admintools/Dockerfile`
+- `images/html/Dockerfile`
 
 This keeps the shared build image and the copied-venv runtime images aligned on the same reviewed Debian package state.
 
 ### Phase 5: Handle `vccs` as an explicit follow-up decision
 
-`vccs/Dockerfile` is structurally different because it starts from the separately pinned Luna runtime image rather than from the shared Debian base flow.
+`images/vccs/Dockerfile` is structurally different because it starts from the separately pinned Luna runtime image rather than from the shared Debian base flow.
 
 The plan should explicitly verify whether the Luna base remains Debian-compatible with the shared `DEBIAN_VERSION` policy.
 
@@ -241,10 +241,10 @@ Recommended checks:
 The safest rollout order is:
 
 1. Add reviewed snapshot pins and validation tooling.
-2. Convert `prebuild/Dockerfile`.
+2. Convert `images/prebuild/Dockerfile`.
 3. Validate Python environment builds.
 4. Convert the Debian-based runtime Dockerfiles that copy shared virtual environments.
-5. Convert `html/Dockerfile` and `admintools/Dockerfile`.
+5. Convert `images/html/Dockerfile` and `images/admintools/Dockerfile`.
 6. Review `vccs` separately.
 7. Add CI checks that prevent regression to floating apt inputs.
 

@@ -1,5 +1,5 @@
-include ../build-toolchain-versions.mk
-include ../base-image-versions.mk
+include ../../versions/build-toolchain.mk
+include ../../versions/base-images.mk
 
 docker:
 	docker images | grep -q eduid-prebuild || docker build \

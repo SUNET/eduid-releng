@@ -1,4 +1,4 @@
-include ../base-image-versions.mk
+include ../../versions/base-images.mk
 
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/admintools

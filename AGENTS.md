@@ -66,7 +66,7 @@ Important implementation files:
 - `build/Makefile` for source export and intermediate build orchestration
 - `build/build-js.sh` for frontend artifact creation
 - `build/setup-venv.sh` for Python environment creation
-- service-specific Dockerfiles under `prebuild/`, `webapp/`, `worker/`, `fastapi/`, `satosa_scim/`, `admintools/`, `html/`, and `vccs/`
+- service-specific Dockerfiles under `images/prebuild/`, `images/webapp/`, `images/worker/`, `images/fastapi/`, `images/satosa_scim/`, `images/admintools/`, `images/html/`, and `images/vccs/`
 
 
 ## Validation Expectations

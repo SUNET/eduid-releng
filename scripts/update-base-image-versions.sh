@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$(cd -- "${script_dir}/.." && pwd)
-versions_file="${repo_root}/base-image-versions.mk"
+versions_file="${repo_root}/versions/base-images.mk"
 
 mode=${1:-check}
 
@@ -17,7 +17,7 @@ case "${mode}" in
         ;;
 esac
 
-# Read the currently reviewed values from base-image-versions.mk.
+# Read the currently reviewed values from versions/base-images.mk.
 current_debian_version=$(awk -F ' := ' '/^DEBIAN_VERSION :=/ {print $2}' "${versions_file}")
 current_debian_digest=$(awk -F ' := ' '/^DEBIAN_DIGEST :=/ {print $2}' "${versions_file}")
 

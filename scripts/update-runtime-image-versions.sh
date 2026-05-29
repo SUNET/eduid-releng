@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$(cd -- "${script_dir}/.." && pwd)
-versions_file="${repo_root}/runtime-image-versions.mk"
+versions_file="${repo_root}/versions/runtime-images.mk"
 
 mode=${1:-check}
 

@@ -18,10 +18,10 @@ If the file exists, the service installs the listed packages with `pip install -
 
 The following startup scripts currently support `dev-extra-modules.txt`:
 
-- `webapp/start-webapp.sh`
-- `fastapi/start-fastapi.sh`
-- `vccs/start-fastapi.sh`
-- `worker/start-worker.sh`
+- `images/webapp/start-webapp.sh`
+- `images/fastapi/start-fastapi.sh`
+- `images/vccs/start-fastapi.sh`
+- `images/worker/start-worker.sh`
 
 The file is expected to come from the mounted developer source tree referenced by `extra_sources_dir`, which defaults to `/opt/eduid/sources`.
 
@@ -78,7 +78,7 @@ In that case, the developer could place this in the mounted backend source tree:
 apscheduler
 ```
 
-When the `worker` container starts, `worker/start-worker.sh` will install `apscheduler` into `/opt/eduid/worker` before launching the worker process.
+When the `worker` container starts, `images/worker/start-worker.sh` will install `apscheduler` into `/opt/eduid/worker` before launching the worker process.
 
 That lets the developer test the new code path without first rebuilding the shared `eduid-build` image and then the runtime image.
 

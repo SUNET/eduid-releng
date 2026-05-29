@@ -1,17 +1,17 @@
-include ../base-image-versions.mk
+include ../../versions/base-images.mk
 
 REGISTRY?=	platform.sunet.se
-DOCKERIMAGE?=	$(REGISTRY)/eduid/satosa_scim
+DOCKERIMAGE?=	$(REGISTRY)/eduid/webapp
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-satosa_scim:$(VERSION)" .
-	docker tag "eduid-satosa_scim:$(VERSION)" "eduid-satosa_scim:latest"
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-webapp:$(VERSION)" .
+	docker tag "eduid-webapp:$(VERSION)" "eduid-webapp:latest"
 
 docker_tagpush:
 	test -n '$(VERSION)' || exit 1
 	test -n '$(TAGSUFFIX)' || exit 1
-	docker tag "eduid-satosa_scim:$(VERSION)" "$(DOCKERIMAGE):$(VERSION)-$(TAGSUFFIX)"
+	docker tag "eduid-webapp:$(VERSION)" "$(DOCKERIMAGE):$(VERSION)-$(TAGSUFFIX)"
 	docker push "$(DOCKERIMAGE):$(VERSION)-$(TAGSUFFIX)"
 
 tag_copypush:
@@ -23,4 +23,3 @@ tag_copypush:
 	docker push "$(DOCKERIMAGE):$(VERSION)-$(DSTTAG)"
 
 .PHONY: docker docker_tagpush tag_copypush
-

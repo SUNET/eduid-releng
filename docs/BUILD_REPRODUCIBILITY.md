@@ -57,7 +57,7 @@ The current releng-owned contract is split across these paths:
 - `build/setup-venv.sh` creates virtual environments for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`.
 - `build/setup-venv.sh` installs from `build/sources/eduid-backend/requirements/${NAME}_requirements.txt` when that file exists, or falls back to `requirements/main.txt`.
 - `eduid-backend/requirements/*.txt` are generated with `uv pip compile --generate-hashes`, so the Python dependency graph is version-pinned and hash-pinned at the requirements-file level.
-- `vccs/Dockerfile` currently performs its own separate Python virtualenv creation and dependency installation rather than reusing the shared releng helper.
+- `images/vccs/Dockerfile` currently performs its own separate Python virtualenv creation and dependency installation rather than reusing the shared releng helper.
 
 That means the Python dependency set is substantially better controlled than before, but the full Python build is still not reproducible end-to-end.
 
@@ -70,14 +70,14 @@ What is already controlled:
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
 - The releng build consistently installs from those committed lockfiles with pinned `uv` and `uv pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
-- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` plus `DEBIAN_DIGEST` pair from `base-image-versions.mk` rather than hardcoding `debian:stable` in each file.
-- `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `runtime-image-versions.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
+- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` plus `DEBIAN_DIGEST` pair from `versions/base-images.mk` rather than hardcoding `debian:stable` in each file.
+- `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `versions/runtime-images.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
 - Releng exposes `make show-build-toolchain-versions`, `make check-build-toolchain-versions`, and `make update-build-toolchain-versions` for build toolchain pins, `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
 
 What is still mutable:
 
 - The runtime start scripts install optional packages from `dev-extra-modules.txt` when mounted developer sources provide that file, so the effective Python dependency set can still change at process start in developer-mode setups.
-- `vccs/Dockerfile` still maintains its own separate Python install path instead of reusing the shared helper, and it still falls back from `fastapi_requirements.txt` to `main.txt` if the first install fails.
+- `images/vccs/Dockerfile` still maintains its own separate Python install path instead of reusing the shared helper, and it still falls back from `fastapi_requirements.txt` to `main.txt` if the first install fails.
 - Debian package resolution is still mutable because the Dockerfiles continue to run `apt-get update`, `apt-get dist-upgrade`, and package installs against whatever the configured Debian mirrors serve at build time.
 
 The result is that repeated builds from the same git revisions can still produce different Python environments because the Debian package layer is not yet fixed and `vccs` still has a divergent dependency-install path. The broader container package drift remains a separate repo-wide issue covered below.
@@ -87,7 +87,7 @@ The result is that repeated builds from the same git revisions can still produce
 The following releng work should be completed to make the Python side reproducible in practice rather than only at the lockfile level:
 
 - Consolidate the `vccs` Python install path onto the same reproducibility contract as the other services.
-- Remove the `fastapi_requirements.txt || main.txt` fallback in `vccs/Dockerfile` so dependency failures stop the build instead of producing a degraded image.
+- Remove the `fastapi_requirements.txt || main.txt` fallback in `images/vccs/Dockerfile` so dependency failures stop the build instead of producing a degraded image.
 - Add a focused CI check that rebuilds the Python environment twice from the same inputs and compares the resulting installed package set and image digest-relevant contents.
 
 ## TODO: Shared Container Inputs

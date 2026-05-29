@@ -1,17 +1,17 @@
-include ../base-image-versions.mk
+include ../../versions/base-images.mk
 
 REGISTRY?=	platform.sunet.se
-DOCKERIMAGE?=	$(REGISTRY)/eduid/html
+DOCKERIMAGE?=	$(REGISTRY)/eduid/fastapi
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-html:$(VERSION)" .
-	docker tag "eduid-html:$(VERSION)" "eduid-html:latest"
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-fastapi:$(VERSION)" .
+	docker tag "eduid-fastapi:$(VERSION)" "eduid-fastapi:latest"
 
 docker_tagpush:
 	test -n '$(VERSION)' || exit 1
 	test -n '$(TAGSUFFIX)' || exit 1
-	docker tag "eduid-html:$(VERSION)" "$(DOCKERIMAGE):$(VERSION)-$(TAGSUFFIX)"
+	docker tag "eduid-fastapi:$(VERSION)" "$(DOCKERIMAGE):$(VERSION)-$(TAGSUFFIX)"
 	docker push "$(DOCKERIMAGE):$(VERSION)-$(TAGSUFFIX)"
 
 tag_copypush:
