@@ -1,4 +1,5 @@
-include ../releng-tool-versions.mk
+include ../build-toolchain-versions.mk
+include ../base-image-versions.mk
 
 docker:
 	docker images | grep -q eduid-prebuild || docker build \

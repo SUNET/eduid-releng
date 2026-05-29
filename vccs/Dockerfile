@@ -1,11 +1,11 @@
 ARG VERSION
-ARG LUNA_IMAGE_VERSION
+ARG VCCS_LUNA_IMAGE_REF
 FROM eduid-build:$VERSION AS build
 
 RUN cat /build/submodules.txt
 
 
-FROM docker.sunet.se/luna-client:$LUNA_IMAGE_VERSION
+FROM ${VCCS_LUNA_IMAGE_REF}
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -71,8 +71,10 @@ RUN uv venv /opt/eduid/fastapi && \
 ADD start-fastapi.sh /start-fastapi.sh
 ADD start-vccs.sh /start-vccs.sh
 
-ARG LUNA_IMAGE_VERSION
-RUN echo "luna image tag: $LUNA_IMAGE_VERSION" >> /revision.txt
+ARG VCCS_LUNA_IMAGE_TAG
+ARG VCCS_LUNA_IMAGE_DIGEST
+RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt && \
+  echo "vccs luna image digest: $VCCS_LUNA_IMAGE_DIGEST" >> /revision.txt
 
 WORKDIR /opt/eduid
 

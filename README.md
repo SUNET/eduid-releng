@@ -55,23 +55,36 @@ make fastapi
 make vccs
 ```
 
-### Releng Version Pins
+### Version Pins
 
-The repository keeps releng-owned version pins in `releng-tool-versions.mk`.
+The repository separates build toolchain pins, shared base image pins, and service-specific runtime image pins.
 
 You can inspect and refresh them with:
 
 ```bash
-make show-releng-tool-versions
-make check-releng-tool-versions
-make update-releng-tool-versions
+make show-build-toolchain-versions
+make check-build-toolchain-versions
+make update-build-toolchain-versions
+make show-base-image-versions
+make check-base-image-versions
+make update-base-image-versions
+make show-runtime-image-versions
+make check-runtime-image-versions
+make update-runtime-image-versions
 ```
 
-The current helper checks:
+The build toolchain helper checks:
+
+- the pinned `uv` release version, asset, and checksum
+
+The base image helper checks:
 
 - `DEBIAN_VERSION` against Debian `stable`'s current codename
-- `LUNA_IMAGE_VERSION` against the latest stable numeric `luna-client` tag in `docker.sunet.se`
-- the pinned `uv` release version, asset, and checksum
+
+The runtime image helper checks:
+
+- `VCCS_LUNA_IMAGE_TAG` against the latest stable numeric `luna-client` tag in `docker.sunet.se`
+- `VCCS_LUNA_IMAGE_DIGEST` against the resolved manifest digest for that reviewed tag
 
 ### Release Workflow
 
@@ -113,7 +126,9 @@ make dockers
 
 ```
 ├── Makefile          # Main build orchestration
-├── releng-tool-versions.mk # Reviewed Debian, Luna, and uv pins used by releng
+├── build-toolchain-versions.mk # Reviewed uv pins used by releng
+├── base-image-versions.mk # Reviewed shared base image pins
+├── runtime-image-versions.mk # Reviewed service-specific runtime image pins
 ├── prebuild/         # Base image with common dependencies
 ├── build/            # Build image and source export
 │   └── repos/        # Git submodules

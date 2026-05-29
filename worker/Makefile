@@ -1,4 +1,4 @@
-include ../releng-tool-versions.mk
+include ../base-image-versions.mk
 
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/worker

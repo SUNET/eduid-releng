@@ -70,9 +70,9 @@ What is already controlled:
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
 - The releng build consistently installs from those committed lockfiles with pinned `uv` and `uv pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
-- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` pin from `releng-tool-versions.mk` rather than hardcoding `debian:stable` in each file.
-- `vccs` now sources its reviewed `LUNA_IMAGE_VERSION` tag from `releng-tool-versions.mk` instead of a root `Makefile` default.
-- Releng exposes `make show-releng-tool-versions`, `make check-releng-tool-versions`, and `make update-releng-tool-versions` so the Debian release pin, the Luna client tag, and the `uv` release tuple can be reviewed against upstream before they are changed.
+- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` pin from `base-image-versions.mk` rather than hardcoding `debian:stable` in each file.
+- `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `runtime-image-versions.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
+- Releng exposes `make show-build-toolchain-versions`, `make check-build-toolchain-versions`, and `make update-build-toolchain-versions` for build toolchain pins, `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
 
 What is still mutable:
 
