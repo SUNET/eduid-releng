@@ -52,7 +52,7 @@ For the backend release path, releng currently guarantees all of the following:
 
 - `webapp`, `worker`, `fastapi`, `admintools`, and `satosa_scim` copy backend source plus a releng-built virtualenv into the runtime image.
 - `satosa_scim` also applies releng-owned overlays from `images/satosa_scim/patches/`.
-- Releng pins the shared Debian base release name in `versions/base-images.mk` for the Debian-based image paths.
+- Releng pins the shared Debian base tag and digest in `versions/base-images.mk` for the Debian-based image paths.
 - Releng pins the reviewed VCCS Luna image tag and digest in `versions/runtime-images.mk` for the separate `vccs` runtime base.
 
 ## Backend Repository Obligations
@@ -69,6 +69,7 @@ The backend repository must satisfy all of the following for the releng path to 
 
 - The backend repository must commit the generated requirements files releng installs from.
 - Those requirements files must remain compatible with `uv pip install --require-hashes`.
+- The backend repository currently declares `requires-python = "==3.13.*"` in `pyproject.toml`, so releng-owned Python image paths must remain compatible with Python 3.13.
 - If a service requires a distinct dependency set, the backend repository should provide a dedicated `<service>_requirements.txt` instead of relying on releng-specific workarounds.
 
 ### Build interface stability
@@ -102,7 +103,7 @@ The current repository state still has a few backend contract exceptions that sh
 - `vccs` builds its virtualenv inside the final runtime image instead of reusing `build/setup-venv.sh`.
 - `images/vccs/Dockerfile` still falls back from `fastapi_requirements.txt` to `main.txt` if the first install attempt fails.
 - `webapp`, `worker`, `fastapi`, and the delegated FastAPI startup path in `vccs` support `dev-extra-modules.txt`, which can mutate the Python environment at container startup in developer-mode setups.
-- The Debian package layer is still mutable because the Dockerfiles run `apt-get update` and `apt-get dist-upgrade` against live package mirrors at build time.
+- The Debian package layer is still mutable because the releng-owned Debian Dockerfiles continue to run `apt-get update` and `apt-get dist-upgrade` against live package mirrors at build time.
 - `admintools` still relies on `main.txt` rather than a dedicated service requirements file.
 
 ## Operational Checkpoints

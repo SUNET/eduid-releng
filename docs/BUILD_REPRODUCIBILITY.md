@@ -18,6 +18,18 @@ For this repository, reproducibility depends on controlling at least these input
 
 When those inputs are fixed and reviewed, a repeated build should not silently change because a registry served a newer package, a lockfile was regenerated during the build, or a base image drifted underneath the same source tree.
 
+## Current Releng-Owned Pins
+
+The current repository state splits releng-owned pins across three version files loaded by the top-level [Makefile](../Makefile):
+
+- [versions/build-toolchain.mk](../versions/build-toolchain.mk) currently pins `UV_VERSION := 0.11.16` for the shared Python build path.
+- [versions/base-images.mk](../versions/base-images.mk) currently pins `DEBIAN_VERSION := trixie` together with a reviewed `DEBIAN_DIGEST` for the shared Debian-based build and runtime images.
+- [versions/runtime-images.mk](../versions/runtime-images.mk) currently pins `VCCS_LUNA_IMAGE_TAG := 10.9.0-0.0.2` together with a reviewed `VCCS_LUNA_IMAGE_DIGEST` for the separate `vccs` runtime base.
+
+Those files are the current releng-owned source of truth for the shared Python build toolchain and container base identities.
+
+The current repository also includes matching updater/checker scripts in `scripts/update-build-toolchain-versions.sh`, `scripts/update-base-image-versions.sh`, and `scripts/update-runtime-image-versions.sh`, and the top-level `Makefile` exposes those through `show/check/update-*` targets.
+
 ## Frontend Scope
 
 The frontend part of the releng build currently covers these repositories:
@@ -70,6 +82,7 @@ What is already controlled:
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
 - The releng build consistently installs from those committed lockfiles with pinned `uv` and `uv pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
+- The top-level build now reads releng-owned toolchain and base-image pins from `versions/build-toolchain.mk`, `versions/base-images.mk`, and `versions/runtime-images.mk` instead of keeping them in one root pin file.
 - Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` plus `DEBIAN_DIGEST` pair from `versions/base-images.mk` rather than hardcoding `debian:stable` in each file.
 - `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `versions/runtime-images.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
 - Releng exposes `make show-build-toolchain-versions`, `make check-build-toolchain-versions`, and `make update-build-toolchain-versions` for build toolchain pins, `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
@@ -79,6 +92,7 @@ What is still mutable:
 - The runtime start scripts install optional packages from `dev-extra-modules.txt` when mounted developer sources provide that file, so the effective Python dependency set can still change at process start in developer-mode setups.
 - `images/vccs/Dockerfile` still maintains its own separate Python install path instead of reusing the shared helper, and it still falls back from `fastapi_requirements.txt` to `main.txt` if the first install fails.
 - Debian package resolution is still mutable because the Dockerfiles continue to run `apt-get update`, `apt-get dist-upgrade`, and package installs against whatever the configured Debian mirrors serve at build time.
+- The active CI workflow in `.forgejo/workflows/build-action.yaml` still forces `DOCKER_BUILDKIT=0`, so the repository does not yet use a modern BuildKit-native build path for structured metadata or reproducibility-oriented build outputs.
 
 The result is that repeated builds from the same git revisions can still produce different Python environments because the Debian package layer is not yet fixed and `vccs` still has a divergent dependency-install path. The broader container package drift remains a separate repo-wide issue covered below.
 

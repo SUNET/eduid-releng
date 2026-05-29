@@ -53,12 +53,13 @@ The repository already has several good foundations.
 - Frontend release builds now rely on committed lockfiles and `npm ci`.
 - Backend Python requirements are hash-locked upstream and installed with `--require-hashes`.
 - `versions/build-toolchain.mk` now pins the `uv` release asset and checksum, `versions/base-images.mk` pins the Debian release used by Debian-based images, and `versions/runtime-images.mk` pins the Luna client tag used by `vccs`, showing the repo is willing to treat build inputs, shared platform bases, and service-specific runtime bases as reviewed supply-chain inputs.
+- The repository also includes dedicated update/check scripts for those reviewed pins under `scripts/`, which gives releng an explicit maintenance seam for supply-chain inputs.
 
 ### Existing weaknesses
 
 - The active CI workflow explicitly disables BuildKit in `.forgejo/workflows/build-action.yaml`.
 - The active CI workflow builds and pushes images, but does not emit structured provenance, SBOMs, or signatures.
-- Promotion in `Makefile` is tag-based, not digest-based.
+- Promotion in `Makefile` is still tag-based through repeated `tag_copypush` flows, not digest-based.
 - Container inputs are still partly mutable because Debian-based images now pin a release rather than `debian:stable`, but apt resolution is still mutable and `vccs` still uses a separate digest-pinned Luna base plus a divergent runtime build/install path.
 - The repo has good provenance breadcrumbs, but they are mostly file-based and ad hoc rather than standardized attestations.
 - The build pipeline does not yet produce a single release manifest containing image digests, source revisions, lockfile identities, validation results, and attestation references.
