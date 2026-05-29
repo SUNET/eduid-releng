@@ -70,7 +70,7 @@ What is already controlled:
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
 - The releng build consistently installs from those committed lockfiles with pinned `uv` and `uv pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
-- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` pin from `base-image-versions.mk` rather than hardcoding `debian:stable` in each file.
+- Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` plus `DEBIAN_DIGEST` pair from `base-image-versions.mk` rather than hardcoding `debian:stable` in each file.
 - `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `runtime-image-versions.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
 - Releng exposes `make show-build-toolchain-versions`, `make check-build-toolchain-versions`, and `make update-build-toolchain-versions` for build toolchain pins, `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
 
@@ -94,6 +94,5 @@ The following releng work should be completed to make the Python side reproducib
 
 The following reproducibility work is shared across the repository and should not be treated as a backend-only issue:
 
-- Tighten the current Debian base-image pin from a reviewed release name to a digest or equally immutable image reference.
 - Replace floating Debian package resolution with a snapshot or otherwise version-pinned apt input so `dist-upgrade` does not change rebuild results.
 - Review the common build and runtime Dockerfiles so the same container input policy applies consistently across Python and frontend image paths.

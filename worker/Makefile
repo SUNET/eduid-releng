@@ -5,7 +5,7 @@ DOCKERIMAGE?=	$(REGISTRY)/eduid/worker
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --tag "eduid-worker:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-worker:$(VERSION)" .
 	docker tag "eduid-worker:$(VERSION)" "eduid-worker:latest"
 
 docker_tagpush:

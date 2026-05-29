@@ -1,3 +1,4 @@
+ARG DEBIAN_DIGEST
 ARG DEBIAN_VERSION
 ARG VERSION
 FROM eduid-build:$VERSION AS build
@@ -5,7 +6,7 @@ FROM eduid-build:$VERSION AS build
 RUN cat /build/submodules.txt
 
 
-FROM debian:${DEBIAN_VERSION}
+FROM debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}
 
 ENV DEBIAN_FRONTEND noninteractive
 

@@ -5,7 +5,7 @@ DOCKERIMAGE?=	$(REGISTRY)/eduid/admintools
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --tag "eduid-admintools:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-admintools:$(VERSION)" .
 	docker tag "eduid-admintools:$(VERSION)" "eduid-admintools:latest"
 
 docker_tagpush:

@@ -87,6 +87,7 @@ The build toolchain helper checks:
 The base image helper checks:
 
 - `DEBIAN_VERSION` against Debian `stable`'s current codename
+- `DEBIAN_DIGEST` against the resolved Docker Hub manifest digest for that reviewed codename
 
 The runtime image helper checks:
 

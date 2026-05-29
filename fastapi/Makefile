@@ -5,7 +5,7 @@ DOCKERIMAGE?=	$(REGISTRY)/eduid/fastapi
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --tag "eduid-fastapi:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-fastapi:$(VERSION)" .
 	docker tag "eduid-fastapi:$(VERSION)" "eduid-fastapi:latest"
 
 docker_tagpush:

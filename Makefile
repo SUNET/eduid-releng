@@ -37,7 +37,8 @@ update-build-toolchain-versions:
 # Shared base image version pins.
 show-base-image-versions:
 	@echo "Base image versions"
-	@echo "  debian:     $(DEBIAN_VERSION)"
+	@echo "  debian tag:    $(DEBIAN_VERSION)"
+	@echo "  debian digest: $(DEBIAN_DIGEST)"
 
 check-base-image-versions:
 	bash ./scripts/update-base-image-versions.sh check
@@ -84,6 +85,7 @@ real_clean: clean init_submodules
 
 prebuild:
 	cd prebuild && make docker \
+	  DEBIAN_DIGEST="$(DEBIAN_DIGEST)" \
 	  UV_VERSION="$(UV_VERSION)" \
 	  UV_RELEASE_ASSET="$(UV_RELEASE_ASSET)" \
 	  UV_RELEASE_SHA256="$(UV_RELEASE_SHA256)"
