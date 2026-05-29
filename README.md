@@ -6,6 +6,13 @@ This repository manages the build and release process for eduID Docker images.
 
 The release engineering workflow builds Docker images from multiple eduID source repositories and manages their promotion through testing, staging, and production environments.
 
+## Current Status
+
+- The active CI path is the Forgejo workflow in `.forgejo/workflows/build-action.yaml`, which still builds and pushes with `DOCKER_BUILDKIT=0`.
+- Frontend release builds now require committed `package-lock.json` files and use `npm ci --no-audit --no-fund` in `build/build-js.sh`.
+- Shared Debian base-image review lives in `base-image-versions.mk`, while the separate VCCS Luna base is reviewed through the tag-plus-digest pair in `runtime-image-versions.mk`.
+- `webapp`, `worker`, `fastapi`, `satosa_scim`, and `admintools` reuse the shared Python build helper; `vccs` remains the main exception and still creates its runtime virtualenv in its own Dockerfile.
+
 ### Submodules
 
 Source code is included via git submodules:
@@ -137,7 +144,8 @@ make dockers
 ├── fastapi/          # FastAPI Docker image
 ├── satosa_scim/      # SATOSA SCIM Docker image
 ├── admintools/       # Admin tools Docker image
-└── html/             # Static HTML Docker image
+├── html/             # Static HTML Docker image
+└── vccs/             # VCCS Docker image
 ```
 
 ## Docker Registry

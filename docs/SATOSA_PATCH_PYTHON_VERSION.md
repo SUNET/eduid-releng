@@ -6,11 +6,22 @@ The eduID release engineering repository includes performance optimization patch
 
 The current implementation resolves installed package paths dynamically using the SATOSA virtualenv interpreter and applies the overlays through a small manifest-driven helper script. This keeps the image structure close to the other runtime images while making the patch step portable across Python minor versions.
 
-## Current Problem
+## Current Status
+
+The hardcoded-path issue is resolved in the current repo state.
+
+Today:
+
+- `satosa_scim/Dockerfile` copies the prebuilt virtualenv like the other shared-venv images
+- `satosa_scim/apply-package-overlays.sh` resolves package locations dynamically through `/opt/eduid/satosa_scim/bin/python`
+- `satosa_scim/patches/manifest.txt` maps import-package names to overlay files
+- the releng repository no longer depends on a hardcoded `lib/pythonX.Y/` path for SATOSA patch application
+
+## Historical Problem
 
 ### Hardcoded Paths
 
-The `satosa_scim/Dockerfile` currently contains hardcoded paths that assume Python 3.11:
+The earlier `satosa_scim/Dockerfile` implementation contained hardcoded paths that assumed Python 3.11:
 
 ```dockerfile
 COPY ./patches/state.py /opt/eduid/satosa_scim/lib/python3.11/site-packages/satosa/state.py
@@ -25,7 +36,7 @@ The backend (`eduid-backend`) now declares `requires-python = "==3.13.*"` in its
 - The hardcoded `COPY` commands fail with "No such file or directory"
 - The image build fails completely
 
-This is a critical incompatibility between:
+This was a critical incompatibility between:
 - **releng's assumption**: Python 3.11 paths
 - **backend's requirement**: Python 3.13.x
 
@@ -230,6 +241,6 @@ Both are valid compression; zlib is faster for typical SATOSA state object sizes
 
 ---
 
-**Document Version**: 1.1  
-**Last Updated**: May 27, 2026  
+**Document Version**: 1.2  
+**Last Updated**: May 29, 2026  
 **Status**: Resolved in current branch via manifest-driven package overlays

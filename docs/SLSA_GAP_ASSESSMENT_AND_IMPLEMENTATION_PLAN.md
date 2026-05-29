@@ -59,7 +59,7 @@ The repository already has several good foundations.
 - The active CI workflow explicitly disables BuildKit in `.forgejo/workflows/build-action.yaml`.
 - The active CI workflow builds and pushes images, but does not emit structured provenance, SBOMs, or signatures.
 - Promotion in `Makefile` is tag-based, not digest-based.
-- Container inputs are still partly mutable because Debian-based images now pin a release rather than `debian:stable`, but apt resolution is still mutable and `vccs` still relies on a tag-only Luna base image.
+- Container inputs are still partly mutable because Debian-based images now pin a release rather than `debian:stable`, but apt resolution is still mutable and `vccs` still uses a separate digest-pinned Luna base plus a divergent runtime build/install path.
 - The repo has good provenance breadcrumbs, but they are mostly file-based and ad hoc rather than standardized attestations.
 - The build pipeline does not yet produce a single release manifest containing image digests, source revisions, lockfile identities, validation results, and attestation references.
 
