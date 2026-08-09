@@ -13,8 +13,6 @@ if [[ ! $eduid_name ]]; then
     exit 1
 fi
 
-
-export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 eduid_entrypoint=${eduid_entrypoint-"eduid.workers.${eduid_name}.worker"}
 
 min_nodes=${eduid_worker_min_nodes-'3'}

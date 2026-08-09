@@ -20,15 +20,14 @@ When those inputs are fixed and reviewed, a repeated build should not silently c
 
 ## Current Releng-Owned Pins
 
-The current repository state splits releng-owned pins across three version files loaded by the top-level [Makefile](../Makefile):
+The current repository state splits releng-owned reviewed image inputs across two version files loaded by the top-level [Makefile](../Makefile):
 
-- [versions/build-toolchain.mk](../versions/build-toolchain.mk) currently pins `UV_VERSION := 0.11.16` for the shared Python build path.
 - [versions/base-images.mk](../versions/base-images.mk) currently pins `DEBIAN_VERSION := trixie` together with a reviewed `DEBIAN_DIGEST` for the shared Debian-based build and runtime images.
 - [versions/runtime-images.mk](../versions/runtime-images.mk) currently pins `VCCS_LUNA_IMAGE_TAG := 10.9.0-0.0.2` together with a reviewed `VCCS_LUNA_IMAGE_DIGEST` for the separate `vccs` runtime base.
 
-Those files are the current releng-owned source of truth for the shared Python build toolchain and container base identities.
+Those files are the current releng-owned source of truth for container base identities.
 
-The current repository also includes matching updater/checker scripts in `scripts/update-build-toolchain-versions.sh`, `scripts/update-base-image-versions.sh`, and `scripts/update-runtime-image-versions.sh`, and the top-level `Makefile` exposes those through `show/check/update-*` targets.
+The current repository also includes matching helper scripts in `scripts/update-base-image-versions.sh` and `scripts/update-runtime-image-versions.sh`, and the top-level `Makefile` exposes those through `show/check/update-*` targets.
 
 ## Frontend Scope
 
@@ -68,6 +67,7 @@ The current releng-owned contract is split across these paths:
 
 - `build/setup-venv.sh` creates virtual environments for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`.
 - `build/setup-venv.sh` installs from `build/sources/eduid-backend/requirements/${NAME}_requirements.txt` when that file exists, or falls back to `requirements/main.txt`.
+- `build/setup-venv.sh` then bootstraps `setuptools` into the target virtualenv and installs the exported backend source with `uv pip install --no-deps --no-build-isolation`.
 - `eduid-backend/requirements/*.txt` are generated with `uv pip compile --generate-hashes`, so the Python dependency graph is version-pinned and hash-pinned at the requirements-file level.
 - `images/vccs/Dockerfile` currently performs its own separate Python virtualenv creation and dependency installation rather than reusing the shared releng helper.
 
@@ -81,14 +81,15 @@ What is already controlled:
 
 - The backend dependency inputs are checked into version control as compiled lockfiles under `eduid-backend/requirements/`.
 - Those lockfiles include exact package versions and hashes, which is the correct foundation for reproducible Python dependency installation.
-- The releng build consistently installs from those committed lockfiles with pinned `uv` and `uv pip install --require-hashes` rather than resolving from `pyproject.toml` during image creation.
-- The top-level build now reads releng-owned toolchain and base-image pins from `versions/build-toolchain.mk`, `versions/base-images.mk`, and `versions/runtime-images.mk` instead of keeping them in one root pin file.
+- The releng build installs the bulk Python dependency set from those committed lockfiles with `uv` and `uv pip install --require-hashes` rather than resolving the runtime graph from `pyproject.toml` during image creation.
+- The top-level build now reads releng-owned base-image pins from `versions/base-images.mk` and `versions/runtime-images.mk` instead of keeping them in one root pin file.
 - Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` plus `DEBIAN_DIGEST` pair from `versions/base-images.mk` rather than hardcoding `debian:stable` in each file.
 - `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `versions/runtime-images.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
-- Releng exposes `make show-build-toolchain-versions`, `make check-build-toolchain-versions`, and `make update-build-toolchain-versions` for build toolchain pins, `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
+- Releng exposes `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
 
 What is still mutable:
 
+- `build/setup-venv.sh` currently performs a separate unpinned `uv pip install setuptools` before installing `eduid-backend` with `--no-build-isolation`, so the Python build path is not yet driven solely by reviewed lockfile inputs.
 - The runtime start scripts install optional packages from `dev-extra-modules.txt` when mounted developer sources provide that file, so the effective Python dependency set can still change at process start in developer-mode setups.
 - `images/vccs/Dockerfile` still maintains its own separate Python install path instead of reusing the shared helper, and it still falls back from `fastapi_requirements.txt` to `main.txt` if the first install fails.
 - Debian package resolution is still mutable because the Dockerfiles continue to run `apt-get update`, `apt-get dist-upgrade`, and package installs against whatever the configured Debian mirrors serve at build time.
@@ -102,6 +103,7 @@ The following releng work should be completed to make the Python side reproducib
 
 - Consolidate the `vccs` Python install path onto the same reproducibility contract as the other services.
 - Remove the `fastapi_requirements.txt || main.txt` fallback in `images/vccs/Dockerfile` so dependency failures stop the build instead of producing a degraded image.
+- Replace or pin the standalone `setuptools` bootstrap in `build/setup-venv.sh` so the shared Python build path no longer depends on an extra floating build-backend install.
 - Add a focused CI check that rebuilds the Python environment twice from the same inputs and compares the resulting installed package set and image digest-relevant contents.
 
 ## TODO: Shared Container Inputs

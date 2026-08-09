@@ -1,5 +1,4 @@
 REPOS=		${CURDIR}/build/repos
-include versions/build-toolchain.mk
 include versions/base-images.mk
 include versions/runtime-images.mk
 TAGSUFFIX?=	testing
@@ -20,19 +19,6 @@ all:
 	$(info ---         update_what_to_build: Update what code will be built to the upstream branch $(BRANCH) ---)
 	$(info ---         dockers:              Build docker images $(DOCKERS) ---)
 	$(info ---)
-
-# Build toolchain version pins.
-show-build-toolchain-versions:
-	@echo "Build toolchain versions"
-	@echo "  uv version: $(UV_VERSION)"
-	@echo "  uv asset:   $(UV_RELEASE_ASSET)"
-	@echo "  uv sha256:  $(UV_RELEASE_SHA256)"
-
-check-build-toolchain-versions:
-	bash ./scripts/update-build-toolchain-versions.sh check
-
-update-build-toolchain-versions:
-	bash ./scripts/update-build-toolchain-versions.sh update
 
 # Shared base image version pins.
 show-base-image-versions:
@@ -85,10 +71,7 @@ real_clean: clean init_submodules
 
 prebuild:
 	cd images/prebuild && make docker \
-	  DEBIAN_DIGEST="$(DEBIAN_DIGEST)" \
-	  UV_VERSION="$(UV_VERSION)" \
-	  UV_RELEASE_ASSET="$(UV_RELEASE_ASSET)" \
-	  UV_RELEASE_SHA256="$(UV_RELEASE_SHA256)"
+	  DEBIAN_DIGEST="$(DEBIAN_DIGEST)"
 
 build: build_prep prebuild
 	git submodule status > build/submodules.txt
@@ -155,4 +138,4 @@ production_release:
 	cd images/html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd images/vccs && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
-.PHONY: show-build-toolchain-versions check-build-toolchain-versions update-build-toolchain-versions show-base-image-versions check-base-image-versions update-base-image-versions show-runtime-image-versions check-runtime-image-versions update-runtime-image-versions prebuild build $(DOCKERS) staging_release production_release
+.PHONY: show-base-image-versions check-base-image-versions update-base-image-versions show-runtime-image-versions check-runtime-image-versions update-runtime-image-versions prebuild build $(DOCKERS) staging_release production_release

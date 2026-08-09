@@ -68,6 +68,12 @@ Important implementation files:
 - `build/setup-venv.sh` for Python environment creation
 - service-specific Dockerfiles under `images/prebuild/`, `images/webapp/`, `images/worker/`, `images/fastapi/`, `images/satosa_scim/`, `images/admintools/`, `images/html/`, and `images/vccs/`
 
+### Python Build Flow Notes
+
+- `uv` is the official Python environment manager for the environment build flow and the image creation flow.
+- `uv` is not an interpreter provider. Python binaries come from the image or OS package layer, not from `uv`.
+- `uv` is installed with `pip`, and for now it is intentionally installed as the latest available version with no version pin and no digest or checksum verification.
+
 
 ## Validation Expectations
 

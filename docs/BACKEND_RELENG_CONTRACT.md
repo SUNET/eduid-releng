@@ -36,10 +36,12 @@ For the backend release path, releng currently guarantees all of the following:
 
 ### Shared Python build path
 
-- Releng creates service virtualenvs under `/opt/eduid/<name>` with `uv venv`.
+- Releng creates service virtualenvs under `/opt/eduid/<name>` with `uv venv` against the image-provided `python3`, while still checking compatibility with the backend project's Python requirement.
 - Releng installs Python dependencies with `uv pip install --require-hashes` against the SUNET package index.
+- Releng currently bootstraps `setuptools` into each service virtualenv before installing the backend source package.
+- Releng installs the backend source into each service virtualenv with `uv pip install --no-deps --no-build-isolation`, so the setuptools-backed metadata build runs inside the target venv rather than in an isolated build environment.
 - Releng uses the shared helper `build/setup-venv.sh` for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`.
-- Releng pins the shared `uv` tool version in `versions/build-toolchain.mk` and installs that exact release in the prebuild image.
+- Releng installs `uv` into `/opt/uv-bootstrap` in the prebuild image via `pip`, sets `UV_PYTHON_DOWNLOADS=never`, and currently leaves `uv` intentionally unpinned.
 
 ### Dependency input selection
 
@@ -51,6 +53,7 @@ For the backend release path, releng currently guarantees all of the following:
 ### Runtime assembly
 
 - `webapp`, `worker`, `fastapi`, `admintools`, and `satosa_scim` copy backend source plus a releng-built virtualenv into the runtime image.
+- The runtime entrypoints now rely on the installed backend package by default instead of prepending `/opt/eduid/src` to `PYTHONPATH` in production.
 - `satosa_scim` also applies releng-owned overlays from `images/satosa_scim/patches/`.
 - Releng pins the shared Debian base tag and digest in `versions/base-images.mk` for the Debian-based image paths.
 - Releng pins the reviewed VCCS Luna image tag and digest in `versions/runtime-images.mk` for the separate `vccs` runtime base.
@@ -83,6 +86,7 @@ The backend repository must satisfy all of the following for the releng path to 
 Releng does not currently guarantee any of the following:
 
 - that all backend services use a single uniform runtime build path
+- that the shared Python build path is driven only by committed lockfiles end-to-end, because `setuptools` is currently bootstrapped separately before the non-isolated backend source install
 - that runtime images are fully reproducible at the Debian package layer
 - that development-only startup hooks leave the built runtime environment unchanged
 - that every service has a dedicated per-service requirements lockfile
@@ -102,6 +106,7 @@ The current repository state still has a few backend contract exceptions that sh
 
 - `vccs` builds its virtualenv inside the final runtime image instead of reusing `build/setup-venv.sh`.
 - `images/vccs/Dockerfile` still falls back from `fastapi_requirements.txt` to `main.txt` if the first install attempt fails.
+- `build/setup-venv.sh` currently performs a separate unpinned `setuptools` bootstrap so `eduid-backend` can be installed with `--no-build-isolation`.
 - `webapp`, `worker`, `fastapi`, and the delegated FastAPI startup path in `vccs` support `dev-extra-modules.txt`, which can mutate the Python environment at container startup in developer-mode setups.
 - The Debian package layer is still mutable because the releng-owned Debian Dockerfiles continue to run `apt-get update` and `apt-get dist-upgrade` against live package mirrors at build time.
 - `admintools` still relies on `main.txt` rather than a dedicated service requirements file.

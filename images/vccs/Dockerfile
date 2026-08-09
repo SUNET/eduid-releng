@@ -7,7 +7,8 @@ RUN cat /build/submodules.txt
 
 FROM ${VCCS_LUNA_IMAGE_REF}
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+  UV_PYTHON_DOWNLOADS=never
 
 # Add user/group before installing any packages to get consistent uid/gid
 RUN groupadd --system eduid && useradd --system --shell /bin/false --gid eduid eduid
@@ -39,16 +40,25 @@ RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log
 RUN mkdir -p /opt/eduid
 
 COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src
+COPY --from=build /build/sources/eduid-backend/pyproject.toml /tmp/eduid-backend/pyproject.toml
+COPY --from=build /build/sources/eduid-backend/LICENSE /tmp/eduid-backend/LICENSE
+COPY --from=build /build/sources/eduid-backend/src /tmp/eduid-backend/src
 COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
-COPY --from=build /usr/local/bin/uv /usr/local/bin/uv
+COPY --from=build /opt/uv-bootstrap /opt/uv-bootstrap
 COPY --from=build /build/sources/eduid-backend/requirements /tmp/requirements
 
-RUN uv venv /opt/eduid/fastapi && \
-    uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
+RUN system_python="$(command -v python3)" && \
+    /opt/uv-bootstrap/bin/uv venv --project /tmp/eduid-backend --python "${system_python}" /opt/eduid/fastapi && \
+    /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/fastapi_requirements.txt || \
-    uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
+    /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/main.txt && \
-    rm -rf /tmp/requirements && \
+    /opt/uv-bootstrap/bin/uv pip install \
+      --python /opt/eduid/fastapi/bin/python \
+      --no-deps \
+      --no-build-isolation \
+      /tmp/eduid-backend && \
+    rm -rf /tmp/requirements /tmp/eduid-backend && \
     apt-get purge -y \
       build-essential \
       libcairo2-dev \

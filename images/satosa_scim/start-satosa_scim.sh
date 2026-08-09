@@ -15,6 +15,8 @@ fi
 
 . /opt/eduid/satosa_scim/bin/activate
 
+uv_bin="/opt/uv-bootstrap/bin/uv"
+
 # These could be set from Puppet if multiple instances are deployed
 base_dir=${base_dir-'/opt/eduid'}
 project_dir=${project_dir-"${base_dir}/eduid-satosa_scim/src"}
@@ -36,22 +38,19 @@ limit_request_line=${limit_request_line-'4094'}
 test -d "${log_dir}" && chown -R eduid: "${log_dir}"
 test -d "${state_dir}" && chown -R eduid: "${state_dir}"
 
-# set PYTHONPATH if it is not already set using Docker environment
-export PYTHONPATH=${PYTHONPATH-${project_dir}}
-echo "PYTHONPATH=${PYTHONPATH}"
+echo "PYTHONPATH=${PYTHONPATH-}"
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-uv pip freeze --python /opt/eduid/satosa_scim/bin/python
+"${uv_bin}" pip freeze --python /opt/eduid/satosa_scim/bin/python
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
 if [ -f "/opt/eduid/DEVEL_MODE" ]; then
     # developer mode, restart on code changes
     extra_args="${extra_args:+${extra_args} }--reload"
+    export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 fi
-
-export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 
 echo ""
 echo "$0: Starting ${eduid_name}"

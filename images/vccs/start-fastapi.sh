@@ -15,6 +15,8 @@ fi
 
 . /opt/eduid/fastapi/bin/activate
 
+uv_bin="/opt/uv-bootstrap/bin/uv"
+
 # These could be set from Puppet if multiple instances are deployed
 base_dir=${base_dir-'/opt/eduid'}
 project_dir=${project_dir-"${base_dir}/eduid-fastapi/src"}
@@ -37,19 +39,17 @@ limit_request_line=${limit_request_line-'4094'}
 test -d "${log_dir}" && chown -R eduid: "${log_dir}"
 test -d "${state_dir}" && chown -R eduid: "${state_dir}"
 
-# set PYTHONPATH if it is not already set using Docker environment
-export PYTHONPATH=${PYTHONPATH-${project_dir}}
-echo "PYTHONPATH=${PYTHONPATH}"
+echo "PYTHONPATH=${PYTHONPATH-}"
 
 if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
     echo ""
     echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
-    uv pip install --python /opt/eduid/fastapi/bin/python -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    "${uv_bin}" pip install --python /opt/eduid/fastapi/bin/python -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
 fi
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-uv pip freeze --python /opt/eduid/fastapi/bin/python
+"${uv_bin}" pip freeze --python /opt/eduid/fastapi/bin/python
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
@@ -57,9 +57,8 @@ extra_args=""
 if [ -d "${extra_sources_dir}" ]; then
     # developer mode, restart on code changes
     extra_args="${extra_args:+${extra_args} }--reload"
+    export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}${extra_sources_dir}"
 fi
-
-export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
 
 echo ""
 echo "$0: Starting ${eduid_name}"

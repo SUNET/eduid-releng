@@ -10,6 +10,8 @@ fi
 
 . /opt/eduid/webapp/bin/activate
 
+uv_bin="/opt/uv-bootstrap/bin/uv"
+
 # These could be set from Puppet if multiple instances are deployed
 eduid_entrypoint=${eduid_entrypoint-"eduid.webapp.${eduid_name}.run:app"}
 base_dir=${base_dir-'/opt/eduid'}
@@ -33,14 +35,12 @@ limit_request_line=${limit_request_line-'4094'}
 test -d "${log_dir}" && chown -R eduid: "${log_dir}"
 test -d "${state_dir}" && chown -R eduid: "${state_dir}"
 
-# set PYTHONPATH if it is not already set using Docker environment
-export PYTHONPATH=${PYTHONPATH-${project_dir}}
-echo "PYTHONPATH=${PYTHONPATH}"
+echo "PYTHONPATH=${PYTHONPATH-}"
 
 if [ -f "${extra_sources_dir}/eduid/dev-extra-modules.txt" ]; then
     echo ""
     echo "$0: Installing extra modules from ${extra_sources_dir}/eduid/dev-extra-modules.txt"
-    uv pip install --python /opt/eduid/webapp/bin/python -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
+    "${uv_bin}" pip install --python /opt/eduid/webapp/bin/python -r "${extra_sources_dir}/eduid/dev-extra-modules.txt"
 fi
 
 echo ""
@@ -48,7 +48,7 @@ echo "$0: Installed modules:"
 
 # nice to have in docker run output, to check what
 # version of something is actually running.
-uv pip freeze --python /opt/eduid/webapp/bin/python
+"${uv_bin}" pip freeze --python /opt/eduid/webapp/bin/python
 test -f /revision.txt && cat /revision.txt; true
 test -f /submodules.txt && cat /submodules.txt; true
 
@@ -87,10 +87,6 @@ case "${eduid_name}" in
     *)
 	;;
 esac
-
-# Add path to the sources from when the image was built
-export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}/opt/eduid/src"
-
 echo ""
 echo "$0: Starting ${eduid_name}"
 

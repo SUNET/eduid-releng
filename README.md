@@ -10,8 +10,30 @@ The release engineering workflow builds Docker images from multiple eduID source
 
 - The active CI path is the Forgejo workflow in `.forgejo/workflows/build-action.yaml`, which still builds and pushes with `DOCKER_BUILDKIT=0`.
 - Frontend release builds now require committed `package-lock.json` files and use `npm ci --no-audit --no-fund` in `build/build-js.sh`.
+- The shared Python build helper now creates service virtualenvs against the image-provided `python3`, installs locked backend requirements, bootstraps `setuptools`, and then installs the exported `eduid-backend` source package into each service virtualenv.
 - Shared Debian base-image review lives in `versions/base-images.mk`, while the separate VCCS Luna base is reviewed through the tag-plus-digest pair in `versions/runtime-images.mk`.
 - `webapp`, `worker`, `fastapi`, `satosa_scim`, and `admintools` reuse the shared Python build helper; `vccs` remains the main exception and still creates its runtime virtualenv in its own Dockerfile.
+
+### Must TODO In Upstream Frontends
+
+- `eduid-front` must stop deleting `package-lock.json` in its upstream `Makefile`, must require the lockfile to already exist, and must use `npm ci --no-audit --no-fund` instead of `npm install` so releng can build from committed frontend dependency inputs.
+- `eduid-managed-accounts` must make the same upstream `Makefile` changes for `package-lock.json` handling and `npm ci`, for the same reason.
+- Those changes belong in the upstream submodule repositories, not in `build/sources/`.
+
+Use this upstream `Makefile` pattern in both frontend repositories:
+
+```make
+clean:
+	rm -f build/*
+	rm -rf node_modules
+
+package-lock.json:
+	test -f package-lock.json
+
+node_modules: package-lock.json
+	npm ci --no-audit --no-fund
+	touch node_modules
+```
 
 ### Submodules
 
@@ -64,14 +86,11 @@ make vccs
 
 ### Version Pins
 
-The repository separates build toolchain pins, shared base image pins, and service-specific runtime image pins.
+The repository separates shared base image pins and service-specific runtime image pins.
 
 You can inspect and refresh them with:
 
 ```bash
-make show-build-toolchain-versions
-make check-build-toolchain-versions
-make update-build-toolchain-versions
 make show-base-image-versions
 make check-base-image-versions
 make update-base-image-versions
@@ -79,10 +98,6 @@ make show-runtime-image-versions
 make check-runtime-image-versions
 make update-runtime-image-versions
 ```
-
-The build toolchain helper checks:
-
-- the pinned `uv` release version, asset, and checksum
 
 The base image helper checks:
 
@@ -134,7 +149,7 @@ make dockers
 
 ```
 ├── Makefile          # Main build orchestration
-├── versions/         # Reviewed build toolchain and image pins
+├── versions/         # Reviewed image pins and related policy notes
 ├── build/            # Build image and source export
 │   └── repos/        # Git submodules
 ├── images/           # Runtime image implementations
