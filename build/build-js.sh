@@ -18,7 +18,7 @@ if [[ ! -f package-lock.json ]]; then
     exit 1
 fi
 
-npm ci --no-audit --no-fund
+npm ci --ignore-scripts --no-audit --no-fund
 
 # project specific build commands
 if [ "$NAME" == "eduid-front" ]; then

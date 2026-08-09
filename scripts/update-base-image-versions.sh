@@ -23,9 +23,9 @@ current_debian_digest=$(awk -F ' := ' '/^DEBIAN_DIGEST :=/ {print $2}' "${versio
 
 # Track Debian through the current stable codename and resolve the matching
 # multi-arch manifest digest from Docker Hub for an immutable base reference.
-latest_debian_version=$(curl -fsSL https://deb.debian.org/debian/dists/stable/Release | awk -F ': ' '/^Codename:/ {print $2}')
-docker_hub_token=$(curl -fsSL 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/debian:pull' | python3 -c 'import json, sys; print(json.load(sys.stdin)["token"])')
-latest_debian_digest=$(curl -fsSI \
+latest_debian_version=$(curl --proto '=https' --tlsv1.2 -fsSL https://deb.debian.org/debian/dists/stable/Release | awk -F ': ' '/^Codename:/ {print $2}')
+docker_hub_token=$(curl --proto '=https' --tlsv1.2 -fsSL 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/debian:pull' | python3 -c 'import json, sys; print(json.load(sys.stdin)["token"])')
+latest_debian_digest=$(curl --proto '=https' --tlsv1.2 -fsSI \
     -H "Authorization: Bearer ${docker_hub_token}" \
     -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json' \
     "https://registry-1.docker.io/v2/library/debian/manifests/${latest_debian_version}" | awk 'BEGIN {IGNORECASE=1} /^Docker-Content-Digest:/ {print $2}' | tr -d $'\r')
