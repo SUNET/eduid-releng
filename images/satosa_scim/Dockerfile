@@ -42,7 +42,7 @@ COPY --from=build /opt/eduid/satosa_scim /opt/eduid/satosa_scim
 
 # Apply performance overlays for the satosa and saml2 packages without hardcoding a Python minor-version path.
 COPY ./patches /opt/eduid/satosa_scim/patches
-COPY ./apply-package-overlays.sh /opt/eduid/apply-package-overlays.sh
+COPY --chmod=0755 ./apply-package-overlays.sh /opt/eduid/apply-package-overlays.sh
 RUN /opt/eduid/apply-package-overlays.sh /opt/eduid/satosa_scim/bin/python /opt/eduid/satosa_scim/patches && \
   rm -rf /opt/eduid/satosa_scim/patches /opt/eduid/apply-package-overlays.sh
 
