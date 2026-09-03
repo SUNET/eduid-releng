@@ -36,7 +36,6 @@ update-base-image-versions:
 show-runtime-image-versions:
 	@echo "Runtime image versions"
 	@echo "  vccs luna tag:     $(VCCS_LUNA_IMAGE_TAG)"
-	@echo "  vccs luna digest:  $(VCCS_LUNA_IMAGE_DIGEST)"
 
 check-runtime-image-versions:
 	bash ./scripts/update-runtime-image-versions.sh check
@@ -96,7 +95,7 @@ html:
 	cd images/html && make VERSION=$(VERSION) docker
 
 vccs:
-	cd images/vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) VCCS_LUNA_IMAGE_DIGEST=$(VCCS_LUNA_IMAGE_DIGEST) docker
+	cd images/vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) docker
 
 dockers: build $(DOCKERS)
 

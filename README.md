@@ -107,7 +107,6 @@ The base image helper checks:
 The runtime image helper checks:
 
 - `VCCS_LUNA_IMAGE_TAG` against the latest stable numeric `luna-client` tag in `docker.sunet.se`
-- `VCCS_LUNA_IMAGE_DIGEST` against the resolved manifest digest for that reviewed tag
 
 ### Release Workflow
 

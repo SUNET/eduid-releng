@@ -82,9 +82,7 @@ ADD start-fastapi.sh /start-fastapi.sh
 ADD start-vccs.sh /start-vccs.sh
 
 ARG VCCS_LUNA_IMAGE_TAG
-ARG VCCS_LUNA_IMAGE_DIGEST
-RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt && \
-  echo "vccs luna image digest: $VCCS_LUNA_IMAGE_DIGEST" >> /revision.txt
+RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt
 
 WORKDIR /opt/eduid
 

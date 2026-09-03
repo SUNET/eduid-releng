@@ -23,7 +23,7 @@ When those inputs are fixed and reviewed, a repeated build should not silently c
 The current repository state splits releng-owned reviewed image inputs across two version files loaded by the top-level [Makefile](../Makefile):
 
 - [versions/base-images.mk](../versions/base-images.mk) currently pins `DEBIAN_VERSION := trixie` together with a reviewed `DEBIAN_DIGEST` for the shared Debian-based build and runtime images.
-- [versions/runtime-images.mk](../versions/runtime-images.mk) currently pins `VCCS_LUNA_IMAGE_TAG := 10.9.0-0.0.2` together with a reviewed `VCCS_LUNA_IMAGE_DIGEST` for the separate `vccs` runtime base.
+- [versions/runtime-images.mk](../versions/runtime-images.mk) currently records a reviewed `VCCS_LUNA_IMAGE_TAG := 10.9.0-0.0.2` for the separate `vccs` runtime base, with documentation that upstream Luna tags are mutable.
 
 Those files are the current releng-owned source of truth for container base identities.
 
@@ -84,7 +84,7 @@ What is already controlled:
 - The releng build installs the bulk Python dependency set from those committed lockfiles with `uv` and `uv pip install --require-hashes` rather than resolving the runtime graph from `pyproject.toml` during image creation.
 - The top-level build now reads releng-owned base-image pins from `versions/base-images.mk` and `versions/runtime-images.mk` instead of keeping them in one root pin file.
 - Debian-based Dockerfiles now source a reviewed `DEBIAN_VERSION` plus `DEBIAN_DIGEST` pair from `versions/base-images.mk` rather than hardcoding `debian:stable` in each file.
-- `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` plus `VCCS_LUNA_IMAGE_DIGEST` pair from `versions/runtime-images.mk` instead of a root `Makefile` default, so the Luna runtime base is pinned immutably instead of only by tag.
+- `vccs` now sources a reviewed `VCCS_LUNA_IMAGE_TAG` from `versions/runtime-images.mk` instead of a root `Makefile` default, while explicitly documenting that upstream Luna semantic tags are mutable.
 - Releng exposes `make show-base-image-versions`, `make check-base-image-versions`, and `make update-base-image-versions` for shared base-image pins, plus `make show-runtime-image-versions`, `make check-runtime-image-versions`, and `make update-runtime-image-versions` for the VCCS-specific Luna runtime base.
 
 What is still mutable:
