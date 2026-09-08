@@ -1,0 +1,3 @@
+# <import-package> <overlay-source> <target-relative-path>
+satosa state.py state.py
+saml2 sigver.py sigver.py
