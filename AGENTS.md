@@ -23,6 +23,13 @@ It does not primarily implement application business logic. Its purpose is to:
 
 The main workflow is controlled by the top-level `Makefile`.
 
+## Source of Truth
+
+Documentation files under this repository are written for humans and may lag behind the implementation.
+AI agents must never treat documentation as authoritative when deducing how the system currently works.
+Code, tests, configuration, and executable behavior are the only trusted sources of truth.
+Documentation may be used to find likely entry points or to identify documentation that might need updates, but not to prove current runtime behavior or invariants.
+
 ## Repository Boundaries
 
 ### Submodules
@@ -89,6 +96,23 @@ After making changes, use the narrowest validation that matches the modified are
 All commits must be signed.
 
 If commit signing fails for any reason, stop the commit process and fix the signing setup before creating the commit.
+
+## Commit Message Convention
+
+Must create signed commits.
+Must never commit with `--no-gpg-sign`.
+If commit signing fails, fix the signing issue and try again with signing enabled rather than falling back to an unsigned commit.
+Before any commit, must check whether the code changes require documentation updates and include the necessary documentation changes in the same change when they do.
+
+Should use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
+```
+feat(webapp): add new identity verification flow
+fix(userdb): handle missing email gracefully
+refactor(scimapi): simplify group membership logic
+test(workers): add coverage for edge cases
+docs: update API documentation
+chore: update dependencies
+```
 
 ## Change Scope
 
