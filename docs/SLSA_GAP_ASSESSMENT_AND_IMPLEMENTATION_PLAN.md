@@ -50,17 +50,17 @@ The repository already has several good foundations.
 - `build/Makefile` exports clean source snapshots with `git archive` into `build/sources/`.
 - Exported source trees include `revision.txt` files, which preserve useful source provenance.
 - The top-level `Makefile` records submodule state in `build/submodules.txt` during builds.
-- Frontend release builds now rely on committed lockfiles and `npm ci`.
+- Frontend release builds now rely on committed lockfiles and `npm ci` with lifecycle scripts disabled in releng.
 - Backend Python requirements are hash-locked upstream and installed with `--require-hashes`.
-- `versions/build-toolchain.mk` now pins the `uv` release asset and checksum, `versions/base-images.mk` pins the Debian release used by Debian-based images, and `versions/runtime-images.mk` pins the Luna client tag used by `vccs`, showing the repo is willing to treat build inputs, shared platform bases, and service-specific runtime bases as reviewed supply-chain inputs.
-- The repository also includes dedicated update/check scripts for those reviewed pins under `scripts/`, which gives releng an explicit maintenance seam for supply-chain inputs.
+- `versions/build-toolchain.mk` documents the current `uv` bootstrap policy, `versions/base-images.mk` pins the Debian release used by Debian-based images, and `versions/runtime-images.mk` pins the Luna client tag used by `vccs`, showing the repo is willing to treat shared platform bases and service-specific runtime bases as reviewed supply-chain inputs even though `uv` itself is still intentionally unpinned.
+- The repository also includes dedicated update/check scripts for the reviewed base-image and runtime-image pins under `scripts/`, which gives releng an explicit maintenance seam for those supply-chain inputs.
 
 ### Existing weaknesses
 
 - The active CI workflow explicitly disables BuildKit in `.forgejo/workflows/build-action.yaml`.
 - The active CI workflow builds and pushes images, but does not emit structured provenance, SBOMs, or signatures.
 - Promotion in `Makefile` is still tag-based through repeated `tag_copypush` flows, not digest-based.
-- Container inputs are still partly mutable because Debian-based images now pin a release rather than `debian:stable`, but apt resolution is still mutable and `vccs` still uses a separate digest-pinned Luna base plus a divergent runtime build/install path.
+- Container inputs are still partly mutable because Debian-based images now pin a release plus digest, but apt resolution is still mutable, `uv` is still bootstrapped from `pip` without a releng pin, and `vccs` still uses a separate tag-selected Luna base plus a divergent runtime build/install path.
 - The repo has good provenance breadcrumbs, but they are mostly file-based and ad hoc rather than standardized attestations.
 - The build pipeline does not yet produce a single release manifest containing image digests, source revisions, lockfile identities, validation results, and attestation references.
 
@@ -247,7 +247,7 @@ Changes:
    - submodule revisions
    - image names and digests
    - version string
-   - build toolchain pins from `versions/build-toolchain.mk`
+   - build toolchain policy from `versions/build-toolchain.mk` together with the effective `uv` version used in the build
    - shared base-image pins from `versions/base-images.mk`
    - service-specific runtime image pins from `versions/runtime-images.mk`
    - lockfile identities or hashes where relevant

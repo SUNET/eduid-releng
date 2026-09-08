@@ -35,7 +35,7 @@ For the frontend release path, releng currently guarantees all of the following:
 ### Dependency installation policy
 
 - Frontend release builds require a committed `package-lock.json` in the exported source tree.
-- Frontend release builds use `npm ci --no-audit --no-fund`.
+- Frontend release builds use `npm ci --ignore-scripts --no-audit --no-fund`.
 - Releng does not regenerate frontend lockfiles during artifact creation.
 
 ### Build commands and output locations

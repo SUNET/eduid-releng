@@ -39,7 +39,7 @@ The frontend part of the releng build currently covers these repositories:
 The releng repository now enforces the correct high-level contract for frontend dependency installation in `build/build-js.sh`:
 
 - release builds require a committed `package-lock.json`
-- release builds use `npm ci --no-audit --no-fund`
+- release builds use `npm ci --ignore-scripts --no-audit --no-fund`
 - release builds no longer regenerate lockfiles during artifact creation
 
 That releng-side contract is necessary, but the frontend repositories themselves must also follow the same rules in their own local build paths and CI jobs.
@@ -49,7 +49,7 @@ That releng-side contract is necessary, but the frontend repositories themselves
 The following work should be completed in `eduid-front` and `eduid-managed-accounts` to fully satisfy frontend build reproducibility:
 
 - Keep `package-lock.json` committed and updated whenever `package.json` changes.
-- Ensure every release-oriented build path uses `npm ci --no-audit --no-fund` rather than `npm install`.
+- Ensure every release-oriented build path uses `npm ci --ignore-scripts --no-audit --no-fund` rather than `npm install`.
 - Ensure no CI workflow, helper script, or local release path runs `npm i --package-lock-only` during artifact creation.
 - Keep `clean` targets limited to generated outputs and `node_modules`, and never delete the committed lockfile.
 - Run CI and release builds from a clean checkout so the lockfile and tracked sources are the only dependency inputs.

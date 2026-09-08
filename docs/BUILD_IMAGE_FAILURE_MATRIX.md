@@ -11,7 +11,7 @@ The current top-level path is:
 3. `build` builds `eduid-build:$VERSION`
 4. Runtime images consume artifacts from `eduid-build:$VERSION`
 
-The top-level [Makefile](../Makefile) now loads releng-owned pins from [versions/build-toolchain.mk](../versions/build-toolchain.mk), [versions/base-images.mk](../versions/base-images.mk), and [versions/runtime-images.mk](../versions/runtime-images.mk).
+The top-level [Makefile](../Makefile) now loads releng-owned base-image and runtime-image pins from [versions/base-images.mk](../versions/base-images.mk) and [versions/runtime-images.mk](../versions/runtime-images.mk). The separate [versions/build-toolchain.mk](../versions/build-toolchain.mk) file documents the current `uv` bootstrap policy, which is still intentionally unpinned.
 
 The Python-service images covered here are:
 
@@ -110,12 +110,13 @@ Typical failure surface:
 
 ## What No Longer Applies
 
-The older releng failure mode of upgrading `pip` and `wheel` to whatever is current at build time is not the active shared build path anymore. The shared helper now uses `uv pip install --require-hashes` with a releng-owned `uv` pin.
+The older releng failure mode of upgrading `pip` and `wheel` to whatever is current at build time is not the active shared build path anymore. The shared helper now uses `uv pip install --require-hashes` with `uv` bootstrapped in the prebuild image.
 
-That means the current drift risk is no longer primarily installer-version drift. The active risk is:
+That reduces drift relative to the old `pip`/`wheel` bootstrap path, but it does not eliminate installer-version drift because `uv` is still installed from `pip` without a releng pin. The active risk is:
 
 - Python minor-version drift when reviewed image pins or mutable Debian package resolution change the effective interpreter/toolchain
 - wheel compatibility drift for the selected Python and platform
+- `uv` bootstrap drift when a newer `uv` release changes installer behavior
 - Debian package drift affecting native builds and runtime ABI compatibility
 - the separate and non-fail-fast `vccs` install path
 
