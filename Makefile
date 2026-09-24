@@ -32,17 +32,6 @@ check-base-image-versions:
 update-base-image-versions:
 	bash ./scripts/update-base-image-versions.sh update
 
-# Service-specific runtime image version pins.
-show-runtime-image-versions:
-	@echo "Runtime image versions"
-	@echo "  vccs luna tag:     $(VCCS_LUNA_IMAGE_TAG)"
-
-check-runtime-image-versions:
-	bash ./scripts/update-runtime-image-versions.sh check
-
-update-runtime-image-versions:
-	bash ./scripts/update-runtime-image-versions.sh update
-
 build_prep:
 	git submodule update --init
 	git submodule update
@@ -137,4 +126,4 @@ production_release:
 	cd images/html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd images/vccs && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
-.PHONY: show-base-image-versions check-base-image-versions update-base-image-versions show-runtime-image-versions check-runtime-image-versions update-runtime-image-versions prebuild build $(DOCKERS) staging_release production_release
+.PHONY: show-base-image-versions check-base-image-versions update-base-image-versions prebuild build $(DOCKERS) staging_release production_release

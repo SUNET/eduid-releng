@@ -88,15 +88,12 @@ make vccs
 
 The repository separates shared base image pins and service-specific runtime image pins.
 
-You can inspect and refresh them with:
+You can inspect and refresh the shared Debian base pins with:
 
 ```bash
 make show-base-image-versions
 make check-base-image-versions
 make update-base-image-versions
-make show-runtime-image-versions
-make check-runtime-image-versions
-make update-runtime-image-versions
 ```
 
 The base image helper checks:
@@ -104,9 +101,9 @@ The base image helper checks:
 - `DEBIAN_VERSION` against Debian `stable`'s current codename
 - `DEBIAN_DIGEST` against the resolved Docker Hub manifest digest for that reviewed codename
 
-The runtime image helper checks:
+The VCCS runtime build still reads its reviewed Luna tag from `versions/runtime-images.mk`:
 
-- `VCCS_LUNA_IMAGE_TAG` against the latest stable numeric `luna-client` tag in `docker.sunet.se`
+- `VCCS_LUNA_IMAGE_TAG`
 
 ### Release Workflow
 

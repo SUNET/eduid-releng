@@ -40,6 +40,3 @@ List the main top-level targets exposed by the releng repository.
 - `show-base-image-versions`
 - `check-base-image-versions`
 - `update-base-image-versions`
-- `show-runtime-image-versions`
-- `check-runtime-image-versions`
-- `update-runtime-image-versions`

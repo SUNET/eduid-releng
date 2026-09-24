@@ -9,7 +9,6 @@ Document where releng-owned image input review points live today.
 - `versions/base-images.mk`
 - `versions/runtime-images.mk`
 - `scripts/update-base-image-versions.sh`
-- `scripts/update-runtime-image-versions.sh`
 
 ## Shared Debian Base
 
@@ -35,6 +34,3 @@ The root `Makefile` exposes:
 - `show-base-image-versions`
 - `check-base-image-versions`
 - `update-base-image-versions`
-- `show-runtime-image-versions`
-- `check-runtime-image-versions`
-- `update-runtime-image-versions`
