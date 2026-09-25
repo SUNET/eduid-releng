@@ -35,6 +35,13 @@ make dockers
 make VERSION=<version> dockers
 ```
 
+### Build the shared runtime parent only
+
+```bash
+make runtime_common
+make VERSION=<version> runtime_common
+```
+
 ### Build a single image
 
 ```bash
@@ -54,7 +61,8 @@ make vccs
 1. `build_prep`
 2. `prebuild`
 3. `build`
-4. each runtime image target in `$(DOCKERS)`
+4. `runtime_common` for each non-`vccs` runtime image target
+5. each runtime image target in `$(DOCKERS)`
 
 ## Required Inputs
 
@@ -66,6 +74,7 @@ make vccs
 
 - frontend release builds fail if `package-lock.json` is missing in exported sources
 - shared Python builds require `uv` and `python3` in the prebuild image
+- non-`vccs` runtime images inherit their common OS setup from `runtime_common`
 - `vccs` requires `VCCS_LUNA_IMAGE_TAG`
 
 ## Useful Checks

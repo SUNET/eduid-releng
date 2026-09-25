@@ -23,12 +23,16 @@ flowchart TD
 	E --> F[eduid-prebuild]
 	F --> G[make build]
 	G --> H[eduid-build:VERSION]
-	H --> I[shared Python venvs]
-	H --> J[frontend bundles]
-	I --> K[webapp worker fastapi admintools satosa_scim]
-	J --> L[html]
-	H --> M[vccs build stage]
-	M --> N[vccs runtime image]
+	B --> I[make runtime_common]
+	I --> J[eduid-runtime-common:VERSION]
+	H --> K[shared Python venvs]
+	H --> L[frontend bundles]
+	K --> M[webapp worker fastapi admintools satosa_scim]
+	L --> N[html]
+	J --> M
+	J --> N
+	H --> O[vccs build stage]
+	O --> P[vccs runtime image]
 ```
 
 ## Pipeline Stages
@@ -46,7 +50,20 @@ flowchart TD
 
 This is the current release-input selection model. It is branch-driven rather than manifest-driven.
 
-### 2. Build the shared prebuild image
+### 2. Build the shared runtime parent
+
+`make runtime_common` delegates to `images/runtime_common/Makefile`, which
+builds `eduid-runtime-common:$VERSION` from `images/runtime_common/Dockerfile`.
+
+That image:
+
+- starts from `debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}`
+- runs the shared runtime `dist-upgrade`
+- installs the common runtime troubleshooting packages
+- creates the `eduid` user and group
+- creates `/var/log/eduid` and `/opt/eduid`
+
+### 3. Build the shared prebuild image
 
 `make prebuild` delegates to `images/prebuild/Makefile`, which builds `eduid-prebuild` from `images/prebuild/Dockerfile`.
 
@@ -57,13 +74,13 @@ That image:
 - creates `/opt/uv-bootstrap`
 - installs `uv` into that bootstrap environment with `pip`
 
-### 3. Export clean source trees
+### 4. Export clean source trees
 
 `build/Makefile` target `update` removes any previous `build/sources/` tree and recreates it with `git archive` from each submodule.
 
 For each exported repo it also writes a `revision.txt` file using `git show --summary`.
 
-### 4. Build shared artifacts
+### 5. Build shared artifacts
 
 `make build` writes `build/submodules.txt` and then builds `eduid-build:$VERSION` from `build/Dockerfile`.
 
@@ -72,7 +89,7 @@ Inside that image, `build/Makefile` target `install` runs:
 - `setup-venv.sh` for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`
 - `build-js.sh` for `eduid-front` and `eduid-managed-accounts`
 
-### 5. Build runtime images
+### 6. Build runtime images
 
 `make dockers` builds these runtime images:
 
@@ -84,7 +101,9 @@ Inside that image, `build/Makefile` target `install` runs:
 - `html`
 - `vccs`
 
-The Debian-based images copy artifacts from `eduid-build:$VERSION`. `vccs` instead builds its Python environment in-place from the reviewed Luna tag.
+The Debian-based images inherit from `eduid-runtime-common:$VERSION` and copy
+artifacts from `eduid-build:$VERSION`. `vccs` instead builds its Python
+environment in-place from the reviewed Luna tag.
 
 ## Current Tooling Notes
 

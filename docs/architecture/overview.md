@@ -28,7 +28,7 @@ Its main responsibilities are:
 1. Track which upstream revisions are included in a release through git submodules under `build/repos/`.
 2. Export clean source snapshots into `build/sources/` with `git archive`.
 3. Build shared Python and frontend artifacts in the intermediate `eduid-build:$VERSION` image.
-4. Assemble runtime Docker images under `images/`.
+4. Assemble releng-owned runtime parent and runtime Docker images under `images/`.
 5. Promote previously built images through `testing`, `staging`, and `production` tags.
 
 The application code itself lives in upstream repositories, not in this releng repository.
@@ -44,7 +44,7 @@ The application code itself lives in upstream repositories, not in this releng r
 
 1. `make build_prep` initializes and updates submodules.
 2. `make update_what_to_build` checks out the selected branch in each submodule.
-3. `make dockers` builds `eduid-prebuild`, `eduid-build:$VERSION`, and each runtime image.
+3. `make dockers` builds `eduid-runtime-common:$VERSION`, `eduid-prebuild`, `eduid-build:$VERSION`, and each runtime image.
 4. `make VERSION=<version> dockers_tagpush` publishes testing-tagged images.
 5. `make VERSION=<version> staging_release` and `production_release` retag existing images rather than rebuilding them.
 

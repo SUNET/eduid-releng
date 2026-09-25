@@ -18,6 +18,12 @@ flowchart LR
 	A[eduid-build:VERSION] --> B[shared Python venvs]
 	A --> C[frontend bundles]
 	A --> D[exported backend source]
+	R[eduid-runtime-common:VERSION] --> E[webapp]
+	R --> F[worker]
+	R --> G[fastapi]
+	R --> H[admintools]
+	R --> I[satosa_scim]
+	R --> J[html]
 	B --> E[webapp]
 	B --> F[worker]
 	B --> G[fastapi]
@@ -65,6 +71,8 @@ These images copy a prebuilt virtual environment from `eduid-build:$VERSION`:
 
 They also copy exported backend source into `/opt/eduid/src`.
 
+They inherit common operating-system setup from `eduid-runtime-common:$VERSION`.
+
 ### Frontend delivery image
 
 `html` copies:
@@ -72,6 +80,9 @@ They also copy exported backend source into `/opt/eduid/src`.
 - static HTML and nginx content from `eduid-html`
 - built `eduid-front` assets from `/opt/eduid/eduid-front`
 - built `eduid-managed-accounts` assets from `/opt/eduid/eduid-managed-accounts`
+
+It also inherits its common operating-system setup from
+`eduid-runtime-common:$VERSION`.
 
 ### VCCS exception
 

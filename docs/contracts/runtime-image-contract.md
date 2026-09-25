@@ -14,10 +14,15 @@ Summarize what each runtime image receives from releng and how it is built.
 
 Most runtime images:
 
-- start from `debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}`
+- start from `eduid-runtime-common:$VERSION`
 - copy backend source into `/opt/eduid/src`
 - copy a service-specific virtual environment from `eduid-build:$VERSION`
 - run a releng-owned startup script
+
+The shared `runtime_common` parent is the layer that starts from
+`debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}` and provides the common operating
+system packages, the `eduid` user and group, and the standard runtime
+directories.
 
 ## Image Roles
 
