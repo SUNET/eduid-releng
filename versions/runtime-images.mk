@@ -7,6 +7,11 @@
 # Luna client 10.9.0 combined with pyeleven 0.0.2. 
 # The upstream luna-client-10.9.0/deb.sh helper fetches and installs the vendor Luna client package for that build.
 #
+# Note: the included Luna HSM Client is proprietary software from Thales.
+# It is not a publicly redistributable/open source dependency, and downloads
+# are only available to authorized customers and partners with a registered
+# account on the Thales Customer Support Portal.
+#
 # Upstream semantic tags should be treated as mutable: that repo rebuilds with
 # docker build --no-cache=true and uses floating inputs such as ubuntu:24.04,
 # ghcr.io/astral-sh/uv:latest, and apt-get -y upgrade, so the same tag can
