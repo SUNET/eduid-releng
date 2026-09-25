@@ -1,31 +1,14 @@
-ARG DEBIAN_DIGEST
-ARG DEBIAN_VERSION
 ARG VERSION
 FROM eduid-build:$VERSION AS build
 
 RUN cat /build/submodules.txt
 
 
-FROM debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}
+FROM eduid-runtime-common:$VERSION
 
-ENV DEBIAN_FRONTEND noninteractive
-
-# Add user/group before installing any packages to get consistent uid/gid
-RUN groupadd --system eduid && useradd --system --shell /bin/false --gid eduid eduid
-
-#
-# Install nginx and tools that are helpful when troubleshooting.
-#
 RUN apt-get update && \
-    apt-get -y dist-upgrade && \
     apt-get install -y \
       nginx \
-      bind9-host \
-      curl \
-      iputils-ping \
-      net-tools \
-      netcat-openbsd \
-      procps \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # add revisions for upstream projects

@@ -1,11 +1,9 @@
-include ../../versions/base-images.mk
-
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/webapp
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" --build-arg "DEBIAN_VERSION=$(DEBIAN_VERSION)" --build-arg "DEBIAN_DIGEST=$(DEBIAN_DIGEST)" --tag "eduid-webapp:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-webapp:$(VERSION)" .
 	docker tag "eduid-webapp:$(VERSION)" "eduid-webapp:latest"
 
 docker_tagpush:

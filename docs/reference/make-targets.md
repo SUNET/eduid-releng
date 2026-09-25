@@ -16,6 +16,7 @@ List the main top-level targets exposed by the releng repository.
 ## Image Build
 
 - `prebuild`: build `eduid-prebuild`
+- `runtime_common`: build the shared runtime parent used by the Debian-based runtime images
 - `build`: export clean sources and build `eduid-build:$VERSION`
 - `dockers`: build all runtime images
 
