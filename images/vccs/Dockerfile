@@ -78,8 +78,8 @@ RUN system_python="$(command -v python3)" && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-ADD start-fastapi.sh /start-fastapi.sh
-ADD start-vccs.sh /start-vccs.sh
+COPY start-fastapi.sh /start-fastapi.sh
+COPY start-vccs.sh /start-vccs.sh
 
 ARG VCCS_LUNA_IMAGE_TAG
 RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt

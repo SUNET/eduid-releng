@@ -29,7 +29,7 @@ WORKDIR /opt/eduid
 
 EXPOSE 8080
 
-ADD start-webapp.sh /start-webapp.sh
+COPY start-webapp.sh /start-webapp.sh
 
 HEALTHCHECK --interval=27s CMD curl --max-time 20 http://localhost:8080/status/healthy | grep -q STATUS_OK
 

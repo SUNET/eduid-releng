@@ -17,8 +17,8 @@ COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
 COPY --from=build /opt/uv-bootstrap /opt/uv-bootstrap
 COPY --from=build /opt/eduid/worker /opt/eduid/worker
 
-ADD start-worker.sh /start-worker.sh
-ADD worker_healthcheck /usr/local/bin
+COPY start-worker.sh /start-worker.sh
+COPY worker_healthcheck /usr/local/bin
 
 HEALTHCHECK --interval=27s --timeout=15s --start-period=10s CMD /usr/local/bin/worker_healthcheck
 

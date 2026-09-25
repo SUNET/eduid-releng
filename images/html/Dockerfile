@@ -33,7 +33,7 @@ COPY --from=build /build/sources/eduid-html/static /opt/eduid/static/
 COPY --from=build /opt/eduid/eduid-front /opt/eduid/eduid-front/
 COPY --from=build /opt/eduid/eduid-managed-accounts /opt/eduid/eduid-managed-accounts/
 
-ADD start-html.sh /start-html.sh
+COPY start-html.sh /start-html.sh
 
 HEALTHCHECK --interval=27s CMD curl --max-time 3 --silent --output /dev/null http://localhost || exit 1
 
