@@ -8,8 +8,7 @@ SAFENET=/usr/safenet/lunaclient
 
 cat>/etc/Chrystoki.conf<<EOF
 Chrystoki2 = {
-   LibUNIX = /usr/lib/libCryptoki2.so;
-   LibUNIX64 = /usr/lib/libCryptoki2_64.so;
+   LibUNIX64 = ${SAFENET}/lib/libCryptoki2_64.so;
 }
 
 Luna = {
@@ -66,6 +65,8 @@ export PATH=/usr/safenet/lunaclient/bin:$PATH
 if [ ! -f "${SAFENET}/cert/client/${HOSTNAME}.pem" -o ! -f "${SAFENET}/cert/client/${HOSTNAME}Key.pem" ]; then
    mkdir -p "${SAFENET}/cert/client"
    vtl createCert -n ${HOSTNAME}
+   chown root:eduid "${SAFENET}/cert/client/${HOSTNAME}Key.pem"
+   chmod 0640 "${SAFENET}/cert/client/${HOSTNAME}Key.pem"
 fi
 
 export PKCS11MODULE="/usr/safenet/lunaclient/lib/libCryptoki2_64.so"

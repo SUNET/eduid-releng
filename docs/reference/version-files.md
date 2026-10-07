@@ -23,7 +23,14 @@ Owns the shared Debian base identity for Debian-based images:
 
 Owns service-specific runtime base review values:
 
+- `VCCS_LUNA_IMAGE_REPO`
 - `VCCS_LUNA_IMAGE_TAG`
+
+`VCCS_LUNA_IMAGE_REPO` declares the repository, currently
+`platform.sunet.se/keyforge/luna-pyeleven`. `VCCS_LUNA_IMAGE_TAG` selects the
+mutable tag `trixie-10.9.4-123-v0.0.2`. The VCCS Makefile combines them as
+`repo:tag`, without a digest, for the Docker build argument
+`VCCS_LUNA_IMAGE_REF`. The tag is also recorded in `/revision.txt`.
 
 ### `versions/build-toolchain.mk`
 

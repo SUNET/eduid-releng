@@ -6,6 +6,7 @@ The current ADR set is retrospective: it summarizes decisions that can be traced
 
 ## ADR Index
 
+- [0000: Use Debian Stable And Debian-Provided Python](0000-use-debian-stable-and-debian-provided-python.md)
 - [0001: Use Git Submodules For Release Inputs](0001-use-git-submodules-for-release-inputs.md)
 - [0002: Build From Clean Source Exports](0002-build-from-clean-source-exports.md)
 - [0003: Use A Staged Image Build For Shared Artifacts](0003-use-a-staged-image-build-for-shared-artifacts.md)

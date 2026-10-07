@@ -27,6 +27,7 @@ RUN apt-get update && \
       libxml2-dev \
       libxslt1-dev \
       pkg-config \
+      python3 \
       python3-cffi \
       python3-dev \
       python3-venv \
@@ -47,12 +48,12 @@ COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
 COPY --from=build /opt/uv-bootstrap /opt/uv-bootstrap
 COPY --from=build /build/sources/eduid-backend/requirements /tmp/requirements
 
-RUN system_python="$(command -v python3)" && \
-    /opt/uv-bootstrap/bin/uv venv --project /tmp/eduid-backend --python "${system_python}" /opt/eduid/fastapi && \
+RUN /opt/uv-bootstrap/bin/uv venv --project /tmp/eduid-backend --python /usr/bin/python3 /opt/eduid/fastapi && \
     /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/fastapi_requirements.txt || \
     /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python --require-hashes --index-url https://pypi.sunet.se/simple \
       -r /tmp/requirements/main.txt && \
+    /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python setuptools && \
     /opt/uv-bootstrap/bin/uv pip install \
       --python /opt/eduid/fastapi/bin/python \
       --no-deps \

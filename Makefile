@@ -90,7 +90,7 @@ html:
 	cd images/html && make VERSION=$(VERSION) docker
 
 vccs:
-	cd images/vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) docker
+	cd images/vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_REPO="$(VCCS_LUNA_IMAGE_REPO)" VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) docker
 
 dockers: build $(DOCKERS)
 

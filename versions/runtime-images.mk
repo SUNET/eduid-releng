@@ -2,20 +2,16 @@
 
 # Luna client image identity used by the separate vccs runtime build path.
 #
-# The underlying image is built in the https://github.com/SUNET/docker-luna-client/ repo,
-# Upstream there tags images as # VERSION=$(LUNA)-$(PYELEVEN), so a tag like 10.9.0-0.0.2 means 
-# Luna client 10.9.0 combined with pyeleven 0.0.2. 
-# The upstream luna-client-10.9.0/deb.sh helper fetches and installs the vendor Luna client package for that build.
+# The underlying image is built in https://platform.sunet.se/keyforge/docker-luna-pyeleven.
+# The selected tag identifies Debian trixie, Luna client 10.9.4-123,
+# and the upstream pyeleven release label v0.0.2.
 #
 # Note: the included Luna HSM Client is proprietary software from Thales.
 # It is not a publicly redistributable/open source dependency, and downloads
 # are only available to authorized customers and partners with a registered
 # account on the Thales Customer Support Portal.
 #
-# Upstream semantic tags should be treated as mutable: that repo rebuilds with
-# docker build --no-cache=true and uses floating inputs such as ubuntu:24.04,
-# ghcr.io/astral-sh/uv:latest, and apt-get -y upgrade, so the same tag can
-# resolve to a different image digest over time.
-
-# Keep the reviewed tag for operator readability, but do not treat it as immutable.
-VCCS_LUNA_IMAGE_TAG := 10.9.0-0.0.2
+# Keep the reviewed tag for operator readability. Tags are mutable and may
+# resolve to a different image over time; this selection is not digest-pinned.
+VCCS_LUNA_IMAGE_REPO := platform.sunet.se/keyforge/luna-pyeleven
+VCCS_LUNA_IMAGE_TAG := trixie-10.9.4-123-v0.0.2
