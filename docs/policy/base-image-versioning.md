@@ -66,18 +66,23 @@ These values are the current releng-owned review point for shared Debian image i
 
 `vccs` uses `VCCS_LUNA_IMAGE_REPO` and `VCCS_LUNA_IMAGE_TAG` from
 `versions/runtime-images.mk`. This selects the Luna client base from
-`platform.sunet.se/keyforge/luna-pyeleven`, separately from the shared Debian base.
+`platform.sunet.se/keyforge/luna-base`, separately from the shared Debian base.
 
 That selection is currently tag-based, not digest-based.
 
 VCCS copies the shared FastAPI venv from `eduid-build:$VERSION` and uses
-Debian-packaged runtime Python in the Luna-based image. The selected base must
-remain compatible with the venv's Python version and native dependencies.
+Debian-packaged runtime Python in the Luna-based image. Releng then installs
+IdentityPython/pyeleven into that venv using `uv`, with the Git source URL and
+tag selected by `VCCS_PYELEVEN_SOURCE_REPO` and `VCCS_PYELEVEN_SOURCE_VERSION`.
+The selected base must remain compatible with the venv's Python version and
+native dependencies.
 
 For a base substitution, validate the Make dry run, build the VCCS image, and
 check that its copied Python venv runs, native and Luna library dependencies
-resolve, and client certificate generation succeeds. HSM connectivity requires
-a separate check with deployment certificates and a configured HSM.
+resolve, and client certificate generation succeeds. Also verify the installed
+`pyeleven` Git reference and its import with a temporary `config.py`, which
+upstream requires in the working directory. HSM connectivity requires a separate
+check with deployment certificates and a configured HSM.
 
 ## Helper Targets
 

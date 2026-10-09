@@ -52,5 +52,35 @@ fi
 # Tell the application which 64-bit Luna PKCS#11 library to load.
 export PKCS11MODULE="/usr/safenet/lunaclient/lib/libCryptoki2_64.so"
 
-# Replace this shell with the shared FastAPI launcher, which starts VCCS.
-exec /start-fastapi.sh
+# VCCS and pyeleven run as separate services in this container. Supervise both
+# so container signals reach each service and either one's exit stops the other.
+service_pids=()
+stop_services() {
+   # Ignore further shutdown signals while stopping and reaping both services.
+   trap '' TERM INT
+   if [[ ${#service_pids[@]} -gt 0 ]]; then
+      kill -TERM "${service_pids[@]}" 2>/dev/null || true
+      wait "${service_pids[@]}" 2>/dev/null || true
+   fi
+}
+
+# Forward container termination to both services and report the signal exit status.
+trap 'stop_services; exit 143' TERM
+trap 'stop_services; exit 130' INT
+
+# Each launcher execs Gunicorn, so these PIDs remain the service master PIDs.
+/bin/bash /start-pyeleven.sh &
+service_pids+=("$!")
+
+/start-fastapi.sh &
+service_pids+=("$!")
+
+# If either service exits, stop its sibling rather than leave a partial runtime.
+service_status=0
+wait -n "${service_pids[@]}" || service_status=$?
+stop_services
+# Even a clean service exit is unexpected while the container should be running.
+if [[ $service_status -eq 0 ]]; then
+   service_status=1
+fi
+exit "$service_status"

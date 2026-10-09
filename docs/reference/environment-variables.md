@@ -10,7 +10,10 @@ Provide a concise lookup page for the main runtime variables surfaced by releng-
 - `images/worker/start-worker.sh`
 - `images/fastapi/start-fastapi.sh`
 - `images/satosa_scim/start-satosa_scim.sh`
-- `images/vccs/start-fastapi.sh`
+- `images/vccs/start-vccs.sh`
+- `images/vccs/start-pyeleven.sh`
+- `images/vccs/luna-pyeleven/entrypoint.sh`
+- `images/vccs/pyeleven-gunicorn.conf.py`
 
 ## Common Variables
 
@@ -37,7 +40,23 @@ These scripts also surface variables such as:
 - `limit_request_line`
 - `eduid_entrypoint` for `webapp`
 
-`webapp`, `fastapi`, and `vccs/start-fastapi.sh` can also install extra packages from `${extra_sources_dir}/eduid/dev-extra-modules.txt`.
+`webapp`, `fastapi`, and the shared FastAPI launcher used by VCCS can also install extra packages from `${extra_sources_dir}/eduid/dev-extra-modules.txt`.
+
+## VCCS Pyeleven Service
+
+Normal VCCS startup also runs the pyeleven HTTP service using Debian's Python.
+
+- `PYELEVEN_PORT`: pyeleven listener port, default `8000`
+- `PYELEVEN_ARGS`: one Gunicorn argument, default `-w5` (for example, `-w1`); upstream passes this as a single quoted argument
+- `GUNICORN_CMD_ARGS`: additional Gunicorn options; keep the service in the foreground and preserve releng's user and control-socket settings
+- `PKCS11PIN`: HSM PIN written into runtime `/config.py`, default empty; double quotes, backslashes and line breaks are rejected because upstream does not escape them
+- `state_dir`: shared runtime directory, default `/opt/eduid/run`; pyeleven uses a separate `pyeleven.ctl` control socket
+
+The pyeleven launcher can also be invoked as `/bin/bash /start-pyeleven.sh`
+after Luna configuration and certificates have been prepared. It activates the
+Debian-backed venv and delegates to an unmodified upstream entrypoint. Without
+arguments upstream generates `/config.py` and starts pyeleven. With arguments it
+executes the supplied command from `/tmp`.
 
 ## Worker-Specific Variables
 

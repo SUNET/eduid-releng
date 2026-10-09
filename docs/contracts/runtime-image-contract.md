@@ -48,7 +48,30 @@ validate Python imports, native-library resolution, and Luna certificate setup.
 
 FastAPI and VCCS both copy `images/fastapi/start-fastapi.sh` into their images
 as `/start-fastapi.sh`. VCCS first runs its own `/start-vccs.sh` wrapper for Luna
-setup, then delegates to that shared launcher.
+setup, then supervises `/start-fastapi.sh` for VCCS and `/start-pyeleven.sh` for
+the standalone pyeleven service. Both use the shared Debian-backed FastAPI venv
+and run their Gunicorn workers as `eduid`. If either service exits, the wrapper
+stops the other and exits nonzero; container termination is forwarded to both.
+
+Pyeleven defaults to five workers on port `8000`, alongside VCCS on `8080`.
+`PYELEVEN_ARGS` and `PYELEVEN_PORT` override those defaults; Gunicorn must remain
+in the foreground. `images/vccs/luna-pyeleven/entrypoint.sh` is an unmodified
+copy of upstream's entrypoint at commit
+`1cc745608311750c3c95da103bc77e9004817d6c`:
+https://platform.sunet.se/keyforge/docker-luna-pyeleven/src/commit/1cc745608311750c3c95da103bc77e9004817d6c/entrypoint.sh.
+Keep this file byte-identical to the selected upstream revision. Releng-specific
+venv activation and file permissions belong in `start-pyeleven.sh`; worker user,
+working directory and control socket belong in `pyeleven-gunicorn.conf.py`.
+
+Upstream generates `/config.py` at startup with `DEBUG = True`, the Luna library
+path, and the interpolated `PKCS11PIN`. The wrapper prepares the file as
+`root:eduid` with mode `0640` and rejects double quotes, backslashes and line
+breaks in the PIN because upstream does not escape them. Supplied launcher
+arguments run that command from `/tmp` instead of starting pyeleven.
+The PIN is not embedded in the image or printed by the launcher, but is present
+in the generated runtime configuration file. The health
+check requires both pyeleven `/info` and VCCS `/status/healthy`; it does not
+verify HSM connectivity or a signing operation.
 
 Only VCCS uses `images/` as the Docker build context and selects its Dockerfile
 explicitly. FastAPI retains its `images/fastapi/` context. For direct VCCS

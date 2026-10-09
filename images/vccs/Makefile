@@ -7,8 +7,10 @@ docker:
 	test -n '$(VERSION)' || exit 1
 	test -n '$(VCCS_LUNA_IMAGE_REPO)' || exit 1
 	test -n '$(VCCS_LUNA_IMAGE_TAG)' || exit 1
+	test -n '$(VCCS_PYELEVEN_SOURCE_REPO)' || exit 1
+	test -n '$(VCCS_PYELEVEN_SOURCE_VERSION)' || exit 1
 	# Use images/ as context to copy the shared FastAPI launcher; select VCCS's Dockerfile explicitly.
-	docker build --file Dockerfile --build-arg "VERSION=$(VERSION)" --build-arg "VCCS_LUNA_IMAGE_REF=$(VCCS_LUNA_IMAGE_REPO):$(VCCS_LUNA_IMAGE_TAG)" --build-arg "VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG)" --tag "eduid-vccs:$(VERSION)" ..
+	docker build --file Dockerfile --build-arg "VERSION=$(VERSION)" --build-arg "VCCS_LUNA_IMAGE_REF=$(VCCS_LUNA_IMAGE_REPO):$(VCCS_LUNA_IMAGE_TAG)" --build-arg "VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG)" --build-arg "VCCS_PYELEVEN_SOURCE_REPO=$(VCCS_PYELEVEN_SOURCE_REPO)" --build-arg "VCCS_PYELEVEN_SOURCE_VERSION=$(VCCS_PYELEVEN_SOURCE_VERSION)" --tag "eduid-vccs:$(VERSION)" ..
 	docker tag "eduid-vccs:$(VERSION)" "eduid-vccs:latest"
 
 docker_tagpush:
