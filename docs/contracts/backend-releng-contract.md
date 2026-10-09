@@ -40,10 +40,13 @@ For shared Python services releng:
 - `fastapi`
 - `admintools`
 - `satosa_scim`
+- `vccs` (reuses the `fastapi` environment)
 
-## Current Exception
+## VCCS Runtime Base
 
-`vccs` uses exported backend sources and requirements, but it does not reuse the shared helper end to end. It rebuilds its service environment in `images/vccs/Dockerfile`.
+`vccs` copies the shared `/opt/eduid/fastapi` environment rather than rebuilding
+backend dependencies in its runtime Dockerfile. Its separate Luna base must
+provide compatible Debian Python and native runtime libraries.
 
 ## What Releng Does Not Guarantee
 

@@ -70,8 +70,12 @@ These values are the current releng-owned review point for shared Debian image i
 
 That selection is currently tag-based, not digest-based.
 
+VCCS copies the shared FastAPI venv from `eduid-build:$VERSION` and uses
+Debian-packaged runtime Python in the Luna-based image. The selected base must
+remain compatible with the venv's Python version and native dependencies.
+
 For a base substitution, validate the Make dry run, build the VCCS image, and
-check that its Python venv survives package cleanup, Luna library dependencies
+check that its copied Python venv runs, native and Luna library dependencies
 resolve, and client certificate generation succeeds. HSM connectivity requires
 a separate check with deployment certificates and a configured HSM.
 

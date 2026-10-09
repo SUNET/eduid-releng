@@ -52,7 +52,10 @@ The application code itself lives in upstream repositories, not in this releng r
 
 Most Python service images copy a prebuilt virtual environment from the shared build image.
 
-`vccs` is the main exception. It starts from a separate Luna client base and creates its Python environment in its own Dockerfile.
+`vccs` is the runtime-base exception. It starts from a separate Luna client base,
+but copies the shared FastAPI virtual environment from the build image. Its
+Debian-packaged runtime Python and native libraries must remain compatible with
+that environment.
 
 ## Related Pages
 

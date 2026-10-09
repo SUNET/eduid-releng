@@ -101,9 +101,10 @@ Inside that image, `build/Makefile` target `install` runs:
 - `html`
 - `vccs`
 
-The Debian-based images inherit from `eduid-runtime-common:$VERSION` and copy
-artifacts from `eduid-build:$VERSION`. `vccs` instead builds its Python
-environment in-place from the reviewed Luna tag.
+The shared-runtime images inherit from `eduid-runtime-common:$VERSION` and copy
+artifacts from `eduid-build:$VERSION`. `vccs` uses the reviewed Luna base and
+copies the shared `/opt/eduid/fastapi` environment from `eduid-build:$VERSION`,
+with runtime Python supplied by Debian packages in the Luna-based image.
 
 ## Current Tooling Notes
 

@@ -14,7 +14,11 @@ Most releng-managed Python services can share a common Debian-based runtime patt
 
 Keep `vccs` as an explicit runtime-path exception.
 
-In the current implementation, `images/vccs/Dockerfile` starts from `VCCS_LUNA_IMAGE_REF` and builds its Python environment inside the final image instead of copying a shared prebuilt service environment from `eduid-build:$VERSION`.
+In the current implementation, `images/vccs/Dockerfile` starts from
+`VCCS_LUNA_IMAGE_REF` and copies the shared FastAPI environment from
+`eduid-build:$VERSION`. The runtime-base exception does not require a separate
+Python dependency build. Debian packages in the Luna-based image provide the
+runtime interpreter.
 
 ## Consequences
 
@@ -25,8 +29,10 @@ Positive:
 
 Negative:
 
-- `vccs` diverges from the common shared-venv path
-- reproducibility and troubleshooting are harder because `vccs` has its own build behavior
+- the external Luna base must remain compatible with the shared venv's Python
+	version and native dependencies
+- reproducibility and troubleshooting still depend on the separately reviewed
+	Luna base and its runtime packages
 - special-case documentation is required so maintainers do not assume the shared service pattern applies uniformly
 
 ## Evidence

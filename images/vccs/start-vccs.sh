@@ -1,67 +1,47 @@
 #!/bin/bash
 
+# Stop on command failures and trace commands for startup diagnostics.
 set -e
 set -x
 
-# Luna client setup
+# Luna client installation provided by the vendor base image.
 SAFENET=/usr/safenet/lunaclient
 
-cat>/etc/Chrystoki.conf<<EOF
-Chrystoki2 = {
-   LibUNIX64 = ${SAFENET}/lib/libCryptoki2_64.so;
-}
-
-Luna = {
-  DefaultTimeOut = 500000;
-  PEDTimeout1 = 100000;
-   PEDTimeout2 = 200000;
-  PEDTimeout3 = 10000;
-  KeypairGenTimeOut = 2700000;
-  CloningCommandTimeOut = 300000;
-  CommandTimeOutPedSet = 720000;
-}
-
-CardReader = {
-  RemoteCommand = 1;
-  LunaG5Slots = 0;
-  LunaG7Slots = 0;
-}
-
-Misc = {
-  PE1746Enabled = 0;
-   ToolsDir = /usr/safenet/lunaclient/bin;
-}
-LunaSA Client = {
-   ReceiveTimeout = 20000;
-   SSLConfigFile = /usr/safenet/lunaclient/bin/openssl.cnf;
-   ClientPrivKeyFile = /usr/safenet/lunaclient/cert/client/${HOSTNAME}Key.pem;
-   ClientCertFile = /usr/safenet/lunaclient/cert/client/${HOSTNAME}.pem;
-   ServerCAFile = /tmp/CAFile.pem;
-   NetClient = 1;
-EOF
+# Derive numbered HSM server entries from certificate filenames and collect
+# their certificates into the CA bundle used by the Luna client.
+server_entries=""
 N=0
 rm -f /tmp/CAFile.pem
 for cert in `find ${SAFENET}/cert/server -name \*Cert.pem`; do
    hsm=`basename $cert Cert.pem`
    NN=`printf "%02d" $N`
-cat>>/etc/Chrystoki.conf<<EOF
-   ServerName${NN} = ${hsm};
-   ServerPort${NN} = 1792;
-   ServerHtl${NN} = 0;
-EOF
+   printf -v server_entries '%s   ServerName%s = %s;\n   ServerPort%s = 1792;\n   ServerHtl%s = 0;\n' \
+      "$server_entries" "$NN" "$hsm" "$NN" "$NN"
    N=`expr ${N} + 1`
    cat $cert >> /tmp/CAFile.pem
 done
-cat>>/etc/Chrystoki.conf<<EOF
-}
-EOF
 
+# Render only supported placeholders without evaluating the template as code.
+# Include the final line even when the template has no trailing newline.
+while IFS= read -r config_line || [[ -n "$config_line" ]]; do
+   if [[ "$config_line" == '${SERVER_ENTRIES}' ]]; then
+      printf '%s' "$server_entries"
+   else
+      config_line=${config_line//'${SAFENET}'/"${SAFENET}"}
+      printf '%s\n' "${config_line//'${HOSTNAME}'/"${HOSTNAME}"}"
+   fi
+done < /etc/Chrystoki.conf.template > /etc/Chrystoki.conf
+
+# Append deployment-specific configuration fragments in filename order.
 if [ -d /etc/Chrystoki.conf.d ]; then
    cat /etc/Chrystoki.conf.d/*.conf >> /etc/Chrystoki.conf
 fi
 
+# Make Luna tools, including vtl, available for certificate creation.
 export PATH=/usr/safenet/lunaclient/bin:$PATH
 
+# Generate the hostname-specific client pair if either file is missing.
+# Keep new private keys root-owned and readable only by root and the eduid group.
 if [ ! -f "${SAFENET}/cert/client/${HOSTNAME}.pem" -o ! -f "${SAFENET}/cert/client/${HOSTNAME}Key.pem" ]; then
    mkdir -p "${SAFENET}/cert/client"
    vtl createCert -n ${HOSTNAME}
@@ -69,7 +49,8 @@ if [ ! -f "${SAFENET}/cert/client/${HOSTNAME}.pem" -o ! -f "${SAFENET}/cert/clie
    chmod 0640 "${SAFENET}/cert/client/${HOSTNAME}Key.pem"
 fi
 
+# Tell the application which 64-bit Luna PKCS#11 library to load.
 export PKCS11MODULE="/usr/safenet/lunaclient/lib/libCryptoki2_64.so"
 
-# Start fastapi
+# Replace this shell with the shared FastAPI launcher, which starts VCCS.
 exec /start-fastapi.sh
