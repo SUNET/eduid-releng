@@ -20,7 +20,7 @@ Most runtime images:
 - run a releng-owned startup script
 
 The shared `runtime_common` parent is the layer that starts from
-`debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}` and provides the common operating
+`debian:${DEBIAN_VERSION}` and provides the common operating
 system packages, the `eduid` user and group, and the standard runtime
 directories.
 

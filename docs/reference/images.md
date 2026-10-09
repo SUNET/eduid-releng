@@ -12,7 +12,7 @@ Provide a quick lookup table for the runtime images assembled by this repository
 
 | Image | Base | Main content | Notes |
 | --- | --- | --- | --- |
-| `runtime_common` | `debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}` | shared OS packages, `eduid` user, runtime directories | releng-owned parent for Debian-based runtime images |
+| `runtime_common` | `debian:${DEBIAN_VERSION}` | shared OS packages, `eduid` user, runtime directories | releng-owned parent for Debian-based runtime images |
 | `webapp` | `eduid-runtime-common:$VERSION` | backend source + `/opt/eduid/webapp` | shared Python build path |
 | `worker` | `eduid-runtime-common:$VERSION` | backend source + `/opt/eduid/worker` | Celery worker runtime |
 | `fastapi` | `eduid-runtime-common:$VERSION` | backend source + `/opt/eduid/fastapi` | HTTP health check |

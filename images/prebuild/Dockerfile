@@ -1,12 +1,12 @@
-ARG DEBIAN_DIGEST
 ARG DEBIAN_VERSION
-FROM debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}
+FROM debian:${DEBIAN_VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive \
   PATH="/opt/uv-bootstrap/bin:${PATH}" \
   UV_PYTHON_DOWNLOADS=never
 
-RUN apt-get update && \
+ARG APT_REFRESH
+RUN apt-get update -o APT::Update::Error-Mode=any && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
       build-essential \

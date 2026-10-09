@@ -88,18 +88,12 @@ make vccs
 
 The repository separates shared base image pins and service-specific runtime image pins.
 
-You can inspect and refresh the shared Debian base pins with:
+The configured Debian codename is defined by `DEBIAN_VERSION` in
+`versions/base-images.mk`.
 
-```bash
-make show-base-image-versions
-make check-base-image-versions
-make update-base-image-versions
-```
-
-The base image helper checks:
-
-- `DEBIAN_VERSION` against Debian `stable`'s current codename
-- `DEBIAN_DIGEST` against the resolved Docker Hub manifest digest for that reviewed codename
+Debian image builds use that mutable codename tag without a digest pin.
+Change `DEBIAN_VERSION` in `versions/base-images.mk` manually after reviewing
+and validating a Debian major-release upgrade.
 
 The VCCS runtime build still reads its reviewed Luna tag from `versions/runtime-images.mk`:
 

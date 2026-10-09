@@ -35,9 +35,3 @@ List the main top-level targets exposed by the releng repository.
 - `dockers_tagpush`: publish testing-tagged images
 - `staging_release`: promote testing tags to staging
 - `production_release`: promote staging tags to production
-
-## Version Review Helpers
-
-- `show-base-image-versions`
-- `check-base-image-versions`
-- `update-base-image-versions`

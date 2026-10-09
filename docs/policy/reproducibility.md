@@ -19,12 +19,13 @@ Capture the current reproducibility posture of the releng repository.
 - frontend release builds require committed lockfiles
 - frontend installs use `npm ci --ignore-scripts --no-audit --no-fund`
 - backend dependency installation uses `uv pip install --require-hashes`
-- Debian-based images use reviewed `DEBIAN_VERSION` and `DEBIAN_DIGEST`
+- Debian-based images use a reviewed codename in `DEBIAN_VERSION`
 - `vccs` uses a reviewed `VCCS_LUNA_IMAGE_TAG`
 
 ## What Is Still Mutable
 
 - release input selection is still branch-driven
+- Debian image codename tags are mutable and are not digest-pinned
 - `uv` is installed from `pip` without a releng pin
 - `build/setup-venv.sh` installs `setuptools` separately into the target venv
 - Dockerfiles still use live `apt-get update` and `apt-get dist-upgrade`

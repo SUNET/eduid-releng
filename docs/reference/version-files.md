@@ -17,7 +17,8 @@ Show which version files exist today and what they control.
 Owns the shared Debian base identity for Debian-based images:
 
 - `DEBIAN_VERSION`
-- `DEBIAN_DIGEST`
+
+This selects a mutable Debian codename tag, without an image digest pin.
 
 ### `versions/runtime-images.mk`
 

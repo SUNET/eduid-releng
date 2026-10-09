@@ -15,7 +15,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN groupadd --system eduid && useradd --system --shell /bin/false --gid eduid eduid
 RUN mkdir -p /var/log/eduid && chown eduid: /var/log/eduid && chmod 770 /var/log/eduid
 
-RUN apt-get update && \
+ARG APT_REFRESH
+RUN apt-get update -o APT::Update::Error-Mode=any && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
       curl \

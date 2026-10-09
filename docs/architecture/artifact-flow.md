@@ -34,7 +34,7 @@ starting containers from them is a separate deployment operation.
 ```mermaid
 flowchart LR
 	subgraph EXTERNAL["1. External base images"]
-		Q[["Debian image<br/>debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}"]]
+		Q[["Debian image<br/>debian:${DEBIAN_VERSION}"]]
 		L[["Luna base image selected by<br/>VCCS_LUNA_IMAGE_REF"]]
 	end
 	subgraph BASES["2. Build releng base images"]

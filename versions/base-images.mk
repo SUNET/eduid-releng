@@ -1,7 +1,7 @@
 # Shared base image version pins.
 
 # Debian base image identity used by releng-owned Debian-based Dockerfiles.
-# Keep the reviewed codename for operator readability and the digest for immutability.
+# Use the reviewed codename without pinning a specific image digest.
 # Cadence notes for this pin:
 # - Official Debian container images are republished by the Debian image maintainers
 #   at least monthly (~30 days), and may be rebuilt sooner for a major or minor
@@ -17,7 +17,6 @@
 #   released the same day a vulnerability becomes public.
 #   References: https://www.debian.org/security/
 #               https://www.debian.org/security/faq
-# Operational consequence: this digest can lag the latest Debian security archive
+# Operational consequence: this image can lag the latest Debian security archive
 # between container-image republishes even when the codename remains unchanged.
 DEBIAN_VERSION := trixie
-DEBIAN_DIGEST := sha256:4ae67669760b807c19f23902a3fd7c121a6a70cf2ae709035674b23e712e4d62

@@ -57,7 +57,7 @@ builds `eduid-runtime-common:$VERSION` from `images/runtime_common/Dockerfile`.
 
 That image:
 
-- starts from `debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}`
+- starts from `debian:${DEBIAN_VERSION}`
 - runs the shared runtime `dist-upgrade`
 - installs the common runtime troubleshooting packages
 - creates the `eduid` user and group
@@ -69,7 +69,7 @@ That image:
 
 That image:
 
-- starts from `debian:${DEBIAN_VERSION}@${DEBIAN_DIGEST}`
+- starts from `debian:${DEBIAN_VERSION}`
 - installs build dependencies for Python and frontend artifacts
 - creates `/opt/uv-bootstrap`
 - installs `uv` into that bootstrap environment with `pip`

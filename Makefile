@@ -11,6 +11,7 @@ DOCKERS=	webapp worker satosa_scim fastapi admintools html vccs
 RUNTIME_COMMON_DOCKERS=	webapp worker satosa_scim fastapi admintools html
 DATETIME:=	$(shell date -u +%Y%m%dT%H%M%S)
 VERSION?=	$(DATETIME)
+APT_REFRESH?=	$(VERSION)
 
 all:
 	$(info --- INFO: eduID release engineering ---)
@@ -20,18 +21,6 @@ all:
 	$(info ---         update_what_to_build: Update what code will be built to the upstream branch $(BRANCH) ---)
 	$(info ---         dockers:              Build docker images $(DOCKERS) ---)
 	$(info ---)
-
-# Shared base image version pins.
-show-base-image-versions:
-	@echo "Base image versions"
-	@echo "  debian tag:    $(DEBIAN_VERSION)"
-	@echo "  debian digest: $(DEBIAN_DIGEST)"
-
-check-base-image-versions:
-	bash ./scripts/update-base-image-versions.sh check
-
-update-base-image-versions:
-	bash ./scripts/update-base-image-versions.sh update
 
 build_prep:
 	git submodule update --init
@@ -59,11 +48,10 @@ clean:
 real_clean: clean init_submodules
 
 prebuild:
-	cd images/prebuild && make docker \
-	  DEBIAN_DIGEST="$(DEBIAN_DIGEST)"
+	cd images/prebuild && make VERSION=$(VERSION) APT_REFRESH="$(APT_REFRESH)" docker
 
 runtime_common:
-	cd images/runtime_common && make VERSION=$(VERSION) docker
+	cd images/runtime_common && make VERSION=$(VERSION) APT_REFRESH="$(APT_REFRESH)" docker
 
 build: build_prep prebuild
 	git submodule status > build/submodules.txt
@@ -90,7 +78,7 @@ html:
 	cd images/html && make VERSION=$(VERSION) docker
 
 vccs:
-	cd images/vccs && make VERSION=$(VERSION) VCCS_LUNA_IMAGE_REPO="$(VCCS_LUNA_IMAGE_REPO)" VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) docker
+	cd images/vccs && make VERSION=$(VERSION) APT_REFRESH="$(APT_REFRESH)" VCCS_LUNA_IMAGE_REPO="$(VCCS_LUNA_IMAGE_REPO)" VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) docker
 
 dockers: build $(DOCKERS)
 
@@ -132,4 +120,4 @@ production_release:
 	cd images/html && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 	cd images/vccs && make VERSION=$(VERSION) SRCTAG=$(STAGINGTAG) DSTTAG=$(PRODTAG) tag_copypush
 
-.PHONY: show-base-image-versions check-base-image-versions update-base-image-versions prebuild runtime_common build $(DOCKERS) staging_release production_release
+.PHONY: prebuild runtime_common build $(DOCKERS) staging_release production_release
