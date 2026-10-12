@@ -20,7 +20,6 @@ RUN apt-get update -o APT::Update::Error-Mode=any && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
       curl \
-      git \
       python3-minimal \
       xmlsec1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -32,8 +31,12 @@ COPY --from=build /opt/eduid/fastapi /opt/eduid/fastapi
 
 ARG VCCS_PYELEVEN_SOURCE_REPO
 ARG VCCS_PYELEVEN_SOURCE_VERSION
-RUN /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python \
-  "${VCCS_PYELEVEN_SOURCE_REPO}@${VCCS_PYELEVEN_SOURCE_VERSION}"
+RUN apt-get update -o APT::Update::Error-Mode=any && \
+    apt-get install -y git && \
+    /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python \
+      "${VCCS_PYELEVEN_SOURCE_REPO}@${VCCS_PYELEVEN_SOURCE_VERSION}" && \
+    apt-get purge -y --auto-remove git && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY fastapi/start-fastapi.sh /start-fastapi.sh
 COPY vccs/start-vccs.sh /start-vccs.sh
