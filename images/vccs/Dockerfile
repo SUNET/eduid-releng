@@ -29,32 +29,18 @@ COPY --from=build /build/sources/eduid-backend/revision.txt /revision.txt
 COPY --from=build /opt/uv-bootstrap /opt/uv-bootstrap
 COPY --from=build /opt/eduid/fastapi /opt/eduid/fastapi
 
-ARG VCCS_PYELEVEN_SOURCE_REPO
-ARG VCCS_PYELEVEN_SOURCE_VERSION
-RUN apt-get update -o APT::Update::Error-Mode=any && \
-    apt-get install -y git && \
-    /opt/uv-bootstrap/bin/uv pip install --python /opt/eduid/fastapi/bin/python \
-      "${VCCS_PYELEVEN_SOURCE_REPO}@${VCCS_PYELEVEN_SOURCE_VERSION}" && \
-    apt-get purge -y --auto-remove git && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
 COPY fastapi/start-fastapi.sh /start-fastapi.sh
 COPY vccs/start-vccs.sh /start-vccs.sh
-COPY vccs/start-pyeleven.sh /start-pyeleven.sh
 COPY vccs/Chrystoki.conf.template /etc/Chrystoki.conf.template
-COPY vccs/luna-pyeleven/entrypoint.sh /usr/local/lib/luna-pyeleven/entrypoint.sh
-COPY vccs/pyeleven-gunicorn.conf.py /etc/pyeleven-gunicorn.conf.py
 
 ARG VCCS_LUNA_IMAGE_TAG
-RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt && \
-  echo "vccs pyeleven source repo: $VCCS_PYELEVEN_SOURCE_REPO" >> /revision.txt && \
-  echo "vccs pyeleven source version: $VCCS_PYELEVEN_SOURCE_VERSION" >> /revision.txt
+RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt
 
 WORKDIR /opt/eduid
 
-EXPOSE 8080 8000
+EXPOSE 8080
 
-HEALTHCHECK --interval=27s CMD curl --fail --silent --max-time 20 "http://localhost:${PYELEVEN_PORT:-8000}/info" > /dev/null && curl --max-time 20 http://localhost:8080/status/healthy | grep -q STATUS_OK
+HEALTHCHECK --interval=27s CMD curl --max-time 20 http://localhost:8080/status/healthy | grep -q STATUS_OK
 
 ENTRYPOINT [ "/bin/bash"]
 

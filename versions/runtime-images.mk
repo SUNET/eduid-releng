@@ -14,8 +14,3 @@
 # resolve to a different image over time; this selection is not digest-pinned.
 VCCS_LUNA_IMAGE_REPO := platform.sunet.se/keyforge/luna-base
 VCCS_LUNA_IMAGE_TAG := trixie-10.9.4-123
-
-# pyeleven Git source repository and tag.
-# This source release reports package metadata version 0.0.1.
-VCCS_PYELEVEN_SOURCE_REPO := git+https://github.com/IdentityPython/pyeleven.git
-VCCS_PYELEVEN_SOURCE_VERSION := v0.0.2

@@ -106,17 +106,13 @@ review of the upstream base. Promotion does not rebuild images; patches publishe
 after a build require a new tested release.
 
 VCCS copies the shared FastAPI venv from `eduid-build:$VERSION` and uses
-Debian-packaged runtime Python in the Luna-based image. Releng then installs
-IdentityPython/pyeleven into that venv using `uv`, with the Git source URL and
-tag selected by `VCCS_PYELEVEN_SOURCE_REPO` and `VCCS_PYELEVEN_SOURCE_VERSION`.
+Debian-packaged runtime Python in the Luna-based image.
 The selected base must remain compatible with the venv's Python version and
 native dependencies.
 
 For a base substitution, validate the Make dry run, build the VCCS image, and
 check that its copied Python venv runs, native and Luna library dependencies
-resolve, and client certificate generation succeeds. Also verify the installed
-`pyeleven` Git reference and its import with a temporary `config.py`, which
-upstream requires in the working directory. HSM connectivity requires a separate
+resolve, and client certificate generation succeeds. HSM connectivity requires a separate
 check with deployment certificates and a configured HSM.
 
 ## Version Review
