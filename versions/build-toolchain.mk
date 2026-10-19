@@ -7,3 +7,7 @@
 #
 # For now, uv is intentionally installed from pip as the latest available
 # version, with no releng pin, digest check, or checksum verification.
+
+# The Node.js major is an explicit releng policy, not inferred from frontend engines.
+# Major changes require review; minor/patch updates follow the official image tag.
+NODE_MAJOR := 24

@@ -38,6 +38,15 @@ Current build commands:
 - `eduid-front`: `npm run build-staging` and `npm run build-production`
 - `eduid-managed-accounts`: `npx vite build`
 
+The build toolchain uses the Node.js major selected by `NODE_MAJOR` in
+`versions/build-toolchain.mk`, with bundled npm from the official Node.js
+image. The image tag combines that major with the shared Debian codename and
+`-slim`; `--pull` refreshes its latest published minor/patch. Both projects and
+their locked dependencies must support this shared toolchain. Releng does not
+add a custom Node.js/npm engine check or explicitly enable npm's strict engine
+enforcement. Compatibility validation should use clean installs with
+`NPM_CONFIG_ENGINE_STRICT=true` and the build commands above.
+
 ## Delivery Contract
 
 The `html` runtime image is the integration point for:

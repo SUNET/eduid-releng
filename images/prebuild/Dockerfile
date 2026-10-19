@@ -1,4 +1,7 @@
+ARG NODE_IMAGE
 ARG DEBIAN_VERSION
+FROM ${NODE_IMAGE} AS node_toolchain
+
 FROM debian:${DEBIAN_VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -20,7 +23,6 @@ RUN apt-get update -o APT::Update::Error-Mode=any && \
       libxml2-dev \
       libxml2-utils \
       libxslt1-dev \
-      npm \
       pkg-config \
       python3-cffi \
       python3-dev \
@@ -33,3 +35,10 @@ RUN apt-get update -o APT::Update::Error-Mode=any && \
     && python3 -m venv /opt/uv-bootstrap \
     && /opt/uv-bootstrap/bin/pip install --upgrade uv \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY --from=node_toolchain /usr/local/bin/node /usr/local/bin/node
+COPY --from=node_toolchain /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
+    node --version && npm --version && npx --version
