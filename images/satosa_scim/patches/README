@@ -1,0 +1,21 @@
+Performance overlays for the satosa and saml2 packages used by the SATOSA Skolverket proxy
+
+Changes:
+sigver.py - remove half the subprocess calls by hardcoding the xmlsec1 version to 1.2.37
+state.py  - change lzma to zlib for cookie compression
+
+Notes on sigver.py:
+- The overlay does not just avoid repeated `xmlsec1 --version` subprocess calls.
+- It also forces pysaml2 to behave as if the installed xmlsec1 version is 1.2.37.
+- This appears to have been written against Debian 12 (bookworm), which shipped xmlsec1 1.2.37.
+- It still works on Debian 13 (trixie), which ships xmlsec1 1.2.41, because both versions are in the 1.2.x line.
+- The meaningful compatibility boundary is xmlsec1 1.3.x, not 1.2.37 specifically, so this overlay should be re-evaluated before using a distro or base image that ships xmlsec1 1.3.x.
+
+These files patch installed Python packages in the SATOSA virtualenv:
+sigver.py -> import package saml2 (distribution: pysaml2)
+state.py  -> import package satosa
+
+The SATOSA image now applies them through apply-package-overlays.sh, which:
+- resolves the installed package path using /opt/eduid/satosa_scim/bin/python
+- reads patches/manifest.txt to map import packages to overlay files
+- fails the build if the expected package target file is missing
