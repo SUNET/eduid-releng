@@ -138,3 +138,9 @@ The current build flow records:
 - `build/submodules.txt` before building the intermediate image
 
 These are useful breadcrumbs, but they are not formal build attestations.
+
+See [Generated Provenance Files](generated-provenance-files.md) for the complete
+inventory, combined flow diagram, manifest availability, and limitations.
+
+See [Revision Metadata Flow](revision-metadata-flow.md) for the generation
+steps, file-flow diagram, and per-image revision destinations.
