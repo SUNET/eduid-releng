@@ -33,9 +33,6 @@ COPY fastapi/start-fastapi.sh /start-fastapi.sh
 COPY vccs/start-vccs.sh /start-vccs.sh
 COPY vccs/Chrystoki.conf.template /etc/Chrystoki.conf.template
 
-ARG VCCS_LUNA_IMAGE_TAG
-RUN echo "vccs luna image tag: $VCCS_LUNA_IMAGE_TAG" >> /revision.txt
-
 WORKDIR /opt/eduid
 
 EXPOSE 8080

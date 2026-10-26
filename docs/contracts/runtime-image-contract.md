@@ -36,6 +36,11 @@ directories.
 
 ## Current Exceptions
 
+All Python runtime images, including VCCS, copy the backend's generated
+`revision.txt` unchanged to `/revision.txt`. This records the upstream backend
+commit, not the runtime base-image version. VCCS's Luna base is selected
+separately through `VCCS_LUNA_IMAGE_REPO` and `VCCS_LUNA_IMAGE_TAG`.
+
 - `html` does not follow the Python-service pattern
 - `vccs` uses `FROM ${VCCS_LUNA_IMAGE_REF}` rather than the shared Debian base
 - `satosa_scim` applies releng-owned overlays after copying the prebuilt venv

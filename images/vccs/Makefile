@@ -11,7 +11,7 @@ docker:
 	test -n '$(VCCS_LUNA_IMAGE_TAG)' || exit 1
 	docker pull "$(VCCS_LUNA_IMAGE_REPO):$(VCCS_LUNA_IMAGE_TAG)"
 	# Use images/ as context to copy the shared FastAPI launcher; select VCCS's Dockerfile explicitly.
-	docker build --file Dockerfile --build-arg "VERSION=$(VERSION)" --build-arg APT_REFRESH="$(APT_REFRESH)" --build-arg "VCCS_LUNA_IMAGE_REF=$(VCCS_LUNA_IMAGE_REPO):$(VCCS_LUNA_IMAGE_TAG)" --build-arg "VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG)" --tag "eduid-vccs:$(VERSION)" ..
+	docker build --file Dockerfile --build-arg "VERSION=$(VERSION)" --build-arg APT_REFRESH="$(APT_REFRESH)" --build-arg "VCCS_LUNA_IMAGE_REF=$(VCCS_LUNA_IMAGE_REPO):$(VCCS_LUNA_IMAGE_TAG)" --tag "eduid-vccs:$(VERSION)" ..
 	docker tag "eduid-vccs:$(VERSION)" "eduid-vccs:latest"
 
 docker_tagpush:
