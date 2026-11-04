@@ -55,7 +55,8 @@ PY
 }
 
 # Each manifest entry is: <import-package> <overlay-source> <target-relative-path>.
-while read -r package_name source_rel target_rel; do
+# Also process a final line that has no trailing newline.
+while read -r package_name source_rel target_rel || [[ -n "${package_name:-}" ]]; do
     if [[ -z "${package_name}" || "${package_name}" == \#* ]]; then
         continue
     fi
