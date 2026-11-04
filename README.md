@@ -1,167 +1,184 @@
 # eduID Release Engineering
 
-This repository manages the build and release process for eduID Docker images.
+Build and release orchestration for eduID.
 
-## Overview
+This repository does not contain application code. It selects which upstream
+revisions go into a release, builds shared Python and frontend artifacts from
+clean source exports, assembles the runtime Docker images, and promotes those
+images through **testing → staging → production** by retagging.
 
-The release engineering workflow builds Docker images from multiple eduID source repositories and manages their promotion through testing, staging, and production environments.
+## Quick Start
 
-## Current Status
-
-- The active CI path is the Forgejo workflow in `.forgejo/workflows/build-action.yaml`, which still builds and pushes with `DOCKER_BUILDKIT=0`. The legacy `.jenkins.yaml` job is disabled.
-- Frontend release builds now require committed `package-lock.json` files and use `npm ci --ignore-scripts --no-audit --no-fund` in `build/build-js.sh`.
-- The shared Python build helper now creates service virtualenvs against the image-provided `python3`, installs locked backend requirements, bootstraps `setuptools`, and then installs the exported `eduid-backend` source package into each service virtualenv.
-- Shared Debian base-image review lives in `versions/base-images.mk`, while the separate VCCS Luna base is currently reviewed through `VCCS_LUNA_IMAGE_REPO` and `VCCS_LUNA_IMAGE_TAG` in `versions/runtime-images.mk`.
-- `webapp`, `worker`, `fastapi`, `satosa_scim`, and `admintools` reuse the shared Python build helper; `vccs` copies the shared FastAPI virtualenv but uses a separate Luna-backed runtime base.
-
-### Upstream Frontend Build Inputs
-
-- Both frontend repositories preserve their committed `package-lock.json` files during cleanup.
-- `eduid-front` uses `npm ci` in upstream CI and shares its installation policy through `.npmrc`, including strict engine enforcement and disabled installation scripts. Its npm commands build staging and production artifacts; `make buildtest` provides isolated local build checks.
-- `eduid-managed-accounts` requires the existing lockfile and uses `npm ci --ignore-scripts --no-audit --no-fund` in its upstream `Makefile`.
-- Frontend dependency and build changes belong in the upstream submodule repositories, not in `build/sources/`.
-
-### Submodules
-
-Source code is included via git submodules:
-
-- [eduid-backend](https://github.com/SUNET/eduid-backend) - Python backend services
-- [eduid-front](https://github.com/SUNET/eduid-front) - Frontend application
-- [eduid-html](https://github.com/SUNET/eduid-html) - Static HTML/assets
-- [eduid-managed-accounts](https://github.com/SUNET/eduid-managed-accounts) - Managed accounts frontend
-
-### Docker Images
-
-The following Docker images are built:
-
-| Image | Description |
-|-------|-------------|
-| `webapp` | Web application server |
-| `worker` | Background worker processes |
-| `fastapi` | FastAPI-based services |
-| `satosa_scim` | SATOSA SCIM integration |
-| `admintools` | Administrative tools |
-| `html` | Static HTML content |
-| `vccs` | VCCS image with separate Luna-backed runtime path |
-
-## Usage
-
-See the [Makefile operator manual](docs/reference/makefile-operator-manual.md) for every
-top-level target, workflow examples, variable overrides, and operational cautions.
-For task-oriented commands grouped by local environments, CI, and release steps,
-see the [command workflows guide](docs/operations/workflows.md).
-
-### Initial Setup
+Requirements: Git, GNU Make, a working Docker daemon, network access, and
+registry credentials for publishing.
 
 ```bash
-# Initialize submodules
+# Check out the upstream revisions recorded in this repository
 make build_prep
+
+# Build every runtime image locally
+make VERSION=20261104T150000 dockers
 ```
 
-### Building Docker Images
+Running `make` without a target prints a short help message.
+
+Always pass an explicit `VERSION` and reuse it across build, publish, and
+promotion commands. Without it, each `make` invocation generates a new UTC
+timestamp.
+
+## Upstream Sources
+
+Upstream repositories are tracked as git submodules under `build/repos/`:
+
+| Submodule | Content |
+| --- | --- |
+| [eduid-backend](https://github.com/SUNET/eduid-backend) | Python backend services |
+| [eduid-front](https://github.com/SUNET/eduid-front) | Main frontend application |
+| [eduid-managed-accounts](https://github.com/SUNET/eduid-managed-accounts) | Managed accounts frontend |
+| [eduid-html](https://github.com/SUNET/eduid-html) | Static HTML, assets, and nginx config |
+
+The release includes the submodule commits recorded in this repository. To move
+every submodule to an upstream branch:
 
 ```bash
-# Update submodules to latest upstream and build all images
-make update_what_to_build
-make dockers
-
-# Build with a specific version
-make VERSION=20260115T120000 dockers
-
-# Build individual images
-make webapp
-make worker
-make fastapi
-make vccs
+make update_what_to_build                               # origin/main
+make BRANCH=origin/feature-branch update_what_to_build  # branch must exist in every submodule
 ```
 
-### Version Pins
+This target runs `git pull` in this repository and commits each updated
+submodule pointer. Configure commit signing beforehand. Commit failures are
+ignored, so check `git status` and `git log --show-signature` afterward.
+Pushes are always manual.
 
-The repository separates shared base image pins and service-specific runtime image pins.
+Changes to application code belong in the upstream repositories, not in
+`build/repos/` or the generated `build/sources/` exports.
 
-The configured Debian codename is defined by `DEBIAN_VERSION` in
-`versions/base-images.mk`.
+## How The Build Works
 
-Debian image builds use that mutable codename tag without a digest pin.
-Change `DEBIAN_VERSION` in `versions/base-images.mk` manually after reviewing
-and validating a Debian major-release upgrade.
+1. **`prebuild`** builds `eduid-prebuild` from Debian. It provides the build
+   toolchain: Debian Python, native build dependencies, `uv`, and Node.js/npm
+   copied from the official Node image.
+2. **`build`** exports each submodule's committed `HEAD` into `build/sources/`
+   with `git archive`, writes `revision.txt` metadata, and builds
+   `eduid-build:<VERSION>`. Inside that image:
+   - `build/setup-venv.sh` creates one virtualenv per Python service with `uv`
+     and hash-locked backend requirements.
+   - `build/build-js.sh` runs `npm ci` from committed lockfiles and builds both
+     frontends.
+3. **`runtime_common`** builds `eduid-runtime-common:<VERSION>`, the shared
+   Debian runtime parent with the `eduid` user and common OS packages.
+4. **Runtime images** copy the artifacts they need from `eduid-build:<VERSION>`
+   onto their runtime base.
 
-The VCCS runtime build reads its reviewed Luna base image from `versions/runtime-images.mk`:
+`make dockers` runs all of the above. Individual targets such as
+`make VERSION=<version> webapp` also run the shared stages they depend on.
 
-- `VCCS_LUNA_IMAGE_REPO`
-- `VCCS_LUNA_IMAGE_TAG`
+See [build pipeline](docs/architecture/build-pipeline.md) and
+[artifact flow](docs/architecture/artifact-flow.md) for details.
 
-The Debian release in `VCCS_LUNA_IMAGE_TAG` must match `DEBIAN_VERSION`,
-because VCCS runs the FastAPI virtualenv built on the shared Debian base.
+## Runtime Images
 
-The frontend Node.js major is defined by `NODE_MAJOR` in
-`versions/build-toolchain.mk`. The prebuild image imports Node.js and bundled
-npm from the official Node image for that major and the shared Debian codename.
+| Image | Runtime base | Contents |
+| --- | --- | --- |
+| `webapp` | `eduid-runtime-common` | Backend source + `webapp` venv |
+| `worker` | `eduid-runtime-common` | Backend source + `worker` venv |
+| `fastapi` | `eduid-runtime-common` | Backend source + `fastapi` venv |
+| `satosa_scim` | `eduid-runtime-common` | Backend source + `satosa_scim` venv with releng package overlays |
+| `admintools` | `eduid-runtime-common` | Backend source + `admintools` venv |
+| `html` | `eduid-runtime-common` | nginx, `eduid-html` content, and both frontend bundles |
+| `vccs` | Luna client image | Backend source + shared `fastapi` venv |
 
-### Release Workflow
+`vccs` is the only image not based on `eduid-runtime-common`. It runs on a
+separately reviewed Luna HSM client base, which must stay compatible with the
+Debian-built `fastapi` virtualenv it copies.
 
-The release process follows a promotion model: **testing → staging → production**
+Images are published to `<REGISTRY>/eduid/<image>`, where `REGISTRY` defaults to
+`platform.sunet.se`.
 
-#### 1. Build and Push to Testing
+## Releasing
 
 ```bash
-make VERSION=<version> dockers
-make VERSION=<version> dockers_tagpush
+VERSION=20261104T150000
+
+make VERSION="$VERSION" dockers               # build locally
+make VERSION="$VERSION" dockers_tagpush       # push :<VERSION>-testing
+# ...validate testing...
+make VERSION="$VERSION" staging_release       # retag testing -> staging
+# ...validate staging...
+make VERSION="$VERSION" production_release    # retag staging -> production
 ```
 
-Use the same explicit version for both commands. This builds images and pushes
-them with a `-testing` tag suffix, except `admintools`, which uses the unversioned
-`testing` tag.
+- Publishing and promotion always process all seven images, even if the build
+  was restricted with `DOCKERS=...`.
+- Promotion pulls, retags, and pushes existing registry images. It never
+  rebuilds, so it can run on another authenticated host.
+- Nothing is atomic: a failure can leave some images updated and others not.
+  Check the registry before retrying.
+- **`admintools` uses unversioned tags** (`testing`, `staging`, `production`).
+  `VERSION` does not select which `admintools` image gets promoted, and older
+  versions cannot be restored by version. Check its source tag separately.
 
-#### 2. Promote to Staging
+See [promotion](docs/operations/promotion.md) and
+[rollback](docs/operations/rollback.md).
+
+## Continuous Integration
+
+The Forgejo workflow in `.forgejo/workflows/build-action.yaml` runs on every
+branch push and executes:
 
 ```bash
-make VERSION=<version> staging_release
+make dockers dockers_tagpush REGISTRY=platform.sunet.se
 ```
 
-Re-tags images from `-testing` to `-staging`.
-For `admintools`, the tags are `testing` and `staging` without a version prefix.
+with `DOCKER_BUILDKIT=0`. It builds the recorded submodule revisions and
+publishes testing images only. Staging and production promotion are manual.
+The legacy `.jenkins.yaml` job is disabled.
 
-#### 3. Promote to Production
+## Reviewed Inputs
 
-```bash
-make VERSION=<version> production_release
+Image inputs that releng reviews are defined under `versions/`:
+
+| Variable | File | Selects |
+| --- | --- | --- |
+| `DEBIAN_VERSION` | `versions/base-images.mk` | Debian codename for prebuild and runtime images |
+| `NODE_MAJOR` | `versions/build-toolchain.mk` | Node.js major for frontend builds |
+| `VCCS_LUNA_IMAGE_REPO`, `VCCS_LUNA_IMAGE_TAG` | `versions/runtime-images.mk` | Luna client base for `vccs` |
+
+These are mutable tags, not digest pins. The Debian release in
+`VCCS_LUNA_IMAGE_TAG` must match `DEBIAN_VERSION`. `uv` is installed unpinned
+from pip.
+
+See [base image versioning](docs/policy/base-image-versioning.md) and
+[version files](docs/reference/version-files.md).
+
+## Repository Layout
+
+```
+├── Makefile             # Top-level orchestration
+├── versions/            # Reviewed image input values
+├── build/
+│   ├── Makefile         # Source export and eduid-build image
+│   ├── setup-venv.sh    # Python virtualenv builder
+│   ├── build-js.sh      # Frontend builder
+│   ├── repos/           # Git submodules (upstream-owned)
+│   └── sources/         # Generated exports (never edit)
+├── images/
+│   ├── prebuild/        # Build toolchain image
+│   ├── runtime_common/  # Shared Debian runtime parent
+│   └── <service>/       # One directory per runtime image
+├── docs/                # Architecture, operations, contracts, policy, ADRs
+└── .forgejo/            # CI workflow
 ```
 
-Re-tags images from `-staging` to `-production`.
-For `admintools`, the tags are `staging` and `production` without a version prefix.
+## Documentation
 
-### Building from a Specific Branch
+Start at [docs/index.md](docs/index.md). Frequently used pages:
 
-```bash
-make BRANCH=origin/feature-branch update_what_to_build
-make dockers
-```
+- [Makefile operator manual](docs/reference/makefile-operator-manual.md): every target and variable
+- [Command workflows](docs/operations/workflows.md): local, CI, and release commands
+- [Backend](docs/contracts/backend-releng-contract.md) and
+  [frontend](docs/contracts/frontend-releng-contract.md) contracts: what releng expects from upstream
+- [Troubleshooting](docs/operations/troubleshooting.md)
 
-## Directory Structure
-
-```
-├── Makefile          # Main build orchestration
-├── .forgejo/         # Forgejo CI workflow
-├── docs/             # Architecture, operations, contracts, policy, and ADRs
-├── versions/         # Reviewed image pins and related policy notes
-├── build/            # Build image and source export
-│   ├── repos/        # Git submodules (upstream-owned)
-│   └── sources/      # Generated git archive exports (do not edit)
-├── images/           # Runtime image implementations
-│   ├── prebuild/     # Base image with common dependencies
-│   ├── runtime_common/ # Shared Debian runtime parent
-│   ├── webapp/       # Webapp Docker image
-│   ├── worker/       # Worker Docker image
-│   ├── fastapi/      # FastAPI Docker image
-│   ├── satosa_scim/  # SATOSA SCIM Docker image
-│   ├── admintools/   # Admin tools Docker image
-│   ├── html/         # Static HTML Docker image
-│   └── vccs/         # VCCS Docker image
-```
-
-## Docker Registry
-
-The service Makefiles default to `platform.sunet.se/eduid/<image>`.
-
-The active Forgejo workflow also publishes with `REGISTRY=platform.sunet.se`.
+The code is the source of truth. If the documentation disagrees with the
+Makefiles, scripts, or Dockerfiles, trust the code and fix the docs.
