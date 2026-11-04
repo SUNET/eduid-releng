@@ -77,7 +77,7 @@ admintools:
 html:
 	cd images/html && make VERSION=$(VERSION) docker
 
-vccs:
+vccs: build
 	cd images/vccs && make VERSION=$(VERSION) APT_REFRESH="$(APT_REFRESH)" VCCS_LUNA_IMAGE_REPO="$(VCCS_LUNA_IMAGE_REPO)" VCCS_LUNA_IMAGE_TAG=$(VCCS_LUNA_IMAGE_TAG) docker
 
 dockers: build $(DOCKERS)

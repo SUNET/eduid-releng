@@ -106,6 +106,10 @@ artifacts from `eduid-build:$VERSION`. `vccs` uses the reviewed Luna base and
 copies the shared `/opt/eduid/fastapi` environment from `eduid-build:$VERSION`,
 with runtime Python supplied by Debian packages in the Luna-based image.
 
+The top-level `vccs` target depends on `build`, so standalone and parallel
+builds wait for `eduid-build:$VERSION` before starting VCCS. It does not depend
+on `runtime_common` because its runtime base is Luna.
+
 ## Current Tooling Notes
 
 - Frontend builds require committed `package-lock.json` files.
