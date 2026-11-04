@@ -13,7 +13,9 @@ This policy describes its operational application and review points.
 
 - `versions/base-images.mk`
 - `versions/runtime-images.mk`
+- `versions/build-toolchain.mk`
 - `images/prebuild/Dockerfile`
+- `images/prebuild/Makefile`
 - `build/setup-venv.sh`
 
 ## Debian Stable Baseline
@@ -49,6 +51,55 @@ Python packages installed when removing build-only dependencies.
 
 See [ADR 0007](../adr/0007-use-uv-for-releng-python-environment-management.md)
 for the environment-management decision.
+
+## Releng-Owned Toolchain Selection
+
+Upstream projects declare the interpreter and build-tool compatibility they
+require; releng selects the environment used to build and run a release.
+Compatibility requirements constrain that selection but do not automatically
+choose or replace the production toolchain.
+
+For `eduid-backend`, production uses Debian-packaged Python from the selected
+Debian stable release. Releng reviews and commits `DEBIAN_VERSION` and accepts
+the Python version supplied by that release, rather than selecting an
+interpreter from the backend repository. The policy is to follow Debian stable
+through reviewed codename updates, not to switch automatically whenever a new
+release becomes stable. Backend compatibility must be validated before adopting
+the new baseline.
+
+The same ownership principle applies to Node.js: releng selects and commits
+`NODE_MAJOR` in `versions/build-toolchain.mk`. The frontend's `.nvmrc` may
+select Node for upstream development and CI, but it does not control releng's
+release builds. Neither `.nvmrc` nor package engine ranges are read to derive
+the releng major. A frontend revision change must not implicitly change the
+shared production build toolchain.
+
+This is an analogy of responsibility, not interpreter provenance. Python is
+an application runtime maintained by Debian; Node.js is a frontend build tool
+copied, with bundled npm, from an official Node image. Releng does not require
+the Debian-packaged Node version or independently pin npm. The generated
+frontend artifacts are packaged for deployment; Node is not their browser
+runtime.
+
+Keeping Node selection in releng provides a separate, reviewable commit for
+major upgrades and allows compatibility validation of both `eduid-front` and
+`eduid-managed-accounts`, which share the toolchain. Upstream maintainers own
+their compatibility declarations, lockfiles, and build fixes; releng maintainers
+own toolchain selection, release-input review, and validation. A mismatch must
+be resolved before release, not treated as permission to ignore upstream
+requirements. The frontend CI and releng can intentionally have separate
+version settings, so passing upstream CI alone does not establish release-build
+compatibility.
+
+This policy selects a Node major, not an exact Node/npm version. Minor and
+patch updates follow the mutable `node:<major>-<debian>-slim` tag when prebuild
+is rebuilt with `--pull`; Debian image and APT inputs also remain mutable.
+No digest pinning is used. Consequently, reviewed configuration commits make
+major and baseline changes explicit, but do not guarantee identical historical
+rebuilds or eliminate regressions within a major. Validate fresh toolchains
+against both frontend builds and retain actual Node/npm versions in release
+evidence. See [Frontend Toolchain Updates](../operations/build.md#frontend-toolchain-updates)
+for operational checks.
 
 ## Shared Debian Base
 

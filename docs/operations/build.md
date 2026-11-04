@@ -84,6 +84,13 @@ upstream engine ranges or lockfiles. Changing it requires a reviewed policy
 update and compatibility validation of both frontend projects. npm follows
 the selected Node.js image's bundled version, without a separate major pin.
 
+This follows the same ownership principle as production Python: releng chooses
+the release environment, while upstream projects declare compatibility
+requirements. Python comes from the reviewed Debian stable baseline; Node's
+major is reviewed separately in releng, not selected by the frontend `.nvmrc`.
+See [Releng-Owned Toolchain Selection](../policy/base-image-versioning.md#releng-owned-toolchain-selection)
+for the rationale, responsibilities, and limitations.
+
 Releng selects the Node.js major through `NODE_MAJOR` in
 `versions/build-toolchain.mk`. The prebuild Makefile combines it with
 `DEBIAN_VERSION` from `versions/base-images.mk` to select the official
