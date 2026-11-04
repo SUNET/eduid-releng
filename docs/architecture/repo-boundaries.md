@@ -18,8 +18,9 @@ Document which parts of the tree are releng-owned and which are not.
 - `build/`
 - `images/`
 - `versions/`
-- `scripts/`
 - `docs/`
+- `.forgejo/`
+- `.jenkins.yaml` (disabled legacy CI job)
 
 ### Upstream-owned submodules
 

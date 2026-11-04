@@ -272,6 +272,8 @@ Make invocations. Defaults below describe the current implementation.
 | `DEBIAN_VERSION` | Defined in [base-images.mk](../../versions/base-images.mk) | Debian codename used by shared base-image builds. |
 | `VCCS_LUNA_IMAGE_REPO` | Defined in [runtime-images.mk](../../versions/runtime-images.mk) | Repository pulled for the VCCS Luna base. |
 | `VCCS_LUNA_IMAGE_TAG` | Defined in [runtime-images.mk](../../versions/runtime-images.mk) | Luna base tag used by VCCS. |
+| `NODE_MAJOR` | Defined in [build-toolchain.mk](../../versions/build-toolchain.mk) | Node.js major used by the prebuild image for frontend builds. |
+| `NODE_IMAGE` | `docker.io/library/node:$(NODE_MAJOR)-$(DEBIAN_VERSION)-slim` in the prebuild Makefile | Official Node image from which prebuild copies Node.js and bundled npm. A command-line override replaces the composed tag. |
 | `DOCKERIMAGE` | `$(REGISTRY)/eduid/<image>` in each service Makefile | Full registry image name for single-service operations. Do not override globally for multi-image publication: every service would use the same destination. |
 
 Some variables use ordinary or immediate Make assignments rather than `?=`.

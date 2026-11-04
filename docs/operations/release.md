@@ -19,9 +19,12 @@ The version string defaults to the current UTC timestamp from the root `Makefile
 ## Build And Publish Testing Images
 
 ```bash
-make dockers
+make VERSION=<version> dockers
 make VERSION=<version> dockers_tagpush
 ```
+
+Use the same explicit version for both commands. Without an override, separate
+Make invocations generate separate timestamps.
 
 The active Forgejo workflow effectively runs:
 
@@ -46,5 +49,7 @@ The service Makefiles publish to:
 ## Notes
 
 - The active automation builds and pushes testing-tagged images.
+- Most images use `<version>-testing`; `admintools` uses the unversioned
+  `testing` tag.
 - Staging and production are separate promotion steps.
 - The current release flow is tag-based rather than digest-based.

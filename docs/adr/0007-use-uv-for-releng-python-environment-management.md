@@ -32,7 +32,7 @@ Negative:
 
 - `uv` is still intentionally unpinned in current releng policy
 - the separate `setuptools` bootstrap remains a floating input in the shared path
-- `vccs` still diverges from the common shared-venv implementation details
+- `vccs` uses a separate Luna runtime base that must remain compatible with the copied shared FastAPI venv
 
 ## Evidence
 

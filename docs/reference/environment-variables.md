@@ -25,7 +25,7 @@ Provide a concise lookup page for the main runtime variables surfaced by releng-
 - `log_dir`: log directory used by Gunicorn or worker processes
 - `state_dir`: runtime state directory used for pid or control-socket files
 
-## Webapp And FastAPI Family
+## Webapp, FastAPI, And SATOSA
 
 These scripts also surface variables such as:
 
@@ -35,7 +35,9 @@ These scripts also surface variables such as:
 - `worker_timeout`
 - `forwarded_allow_ips`
 - `limit_request_line`
-- `eduid_entrypoint` for `webapp`
+- `eduid_entrypoint`: defaults to `eduid.webapp.${eduid_name}.run:app` for
+  `webapp`; required for `fastapi`, `satosa_scim`, and VCCS through the shared
+  FastAPI launcher
 
 `webapp`, `fastapi`, and the shared FastAPI launcher used by VCCS can also install extra packages from `${extra_sources_dir}/eduid/dev-extra-modules.txt`.
 
@@ -45,6 +47,11 @@ These scripts also surface variables such as:
 - `eduid_entrypoint`
 - `logfile`
 - `celery_args`
+- `NEW_QUEUE`: any nonempty value selects the Python module worker instead of
+  Celery; `eduid_queue` and `celery_args` apply only to the Celery path
+
+The worker can also install extra packages from
+`${extra_sources_dir}/eduid/dev-extra-modules.txt`.
 
 ## SATOSA Note
 

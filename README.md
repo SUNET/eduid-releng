@@ -8,32 +8,18 @@ The release engineering workflow builds Docker images from multiple eduID source
 
 ## Current Status
 
-- The active CI path is the Forgejo workflow in `.forgejo/workflows/build-action.yaml`, which still builds and pushes with `DOCKER_BUILDKIT=0`.
+- The active CI path is the Forgejo workflow in `.forgejo/workflows/build-action.yaml`, which still builds and pushes with `DOCKER_BUILDKIT=0`. The legacy `.jenkins.yaml` job is disabled.
 - Frontend release builds now require committed `package-lock.json` files and use `npm ci --ignore-scripts --no-audit --no-fund` in `build/build-js.sh`.
 - The shared Python build helper now creates service virtualenvs against the image-provided `python3`, installs locked backend requirements, bootstraps `setuptools`, and then installs the exported `eduid-backend` source package into each service virtualenv.
-- Shared Debian base-image review lives in `versions/base-images.mk`, while the separate VCCS Luna base is currently reviewed through `VCCS_LUNA_IMAGE_TAG` in `versions/runtime-images.mk`.
-- `webapp`, `worker`, `fastapi`, `satosa_scim`, and `admintools` reuse the shared Python build helper; `vccs` remains the main exception and still creates its runtime virtualenv in its own Dockerfile.
+- Shared Debian base-image review lives in `versions/base-images.mk`, while the separate VCCS Luna base is currently reviewed through `VCCS_LUNA_IMAGE_REPO` and `VCCS_LUNA_IMAGE_TAG` in `versions/runtime-images.mk`.
+- `webapp`, `worker`, `fastapi`, `satosa_scim`, and `admintools` reuse the shared Python build helper; `vccs` copies the shared FastAPI virtualenv but uses a separate Luna-backed runtime base.
 
-### Must TODO In Upstream Frontends
+### Upstream Frontend Build Inputs
 
-- `eduid-front` must stop deleting `package-lock.json` in its upstream `Makefile`, must require the lockfile to already exist, and must use `npm ci --no-audit --no-fund` instead of `npm install` so releng can build from committed frontend dependency inputs.
-- `eduid-managed-accounts` must make the same upstream `Makefile` changes for `package-lock.json` handling and `npm ci`, for the same reason.
-- Those changes belong in the upstream submodule repositories, not in `build/sources/`.
-
-Use this upstream `Makefile` pattern in both frontend repositories:
-
-```make
-clean:
-	rm -f build/*
-	rm -rf node_modules
-
-package-lock.json:
-	test -f package-lock.json
-
-node_modules: package-lock.json
-	npm ci --no-audit --no-fund
-	touch node_modules
-```
+- Both frontend repositories preserve their committed `package-lock.json` files during cleanup.
+- `eduid-front` uses `npm ci` in upstream CI and shares its installation policy through `.npmrc`, including strict engine enforcement and disabled installation scripts. Its npm commands build staging and production artifacts; `make buildtest` provides isolated local build checks.
+- `eduid-managed-accounts` requires the existing lockfile and uses `npm ci --ignore-scripts --no-audit --no-fund` in its upstream `Makefile`.
+- Frontend dependency and build changes belong in the upstream submodule repositories, not in `build/sources/`.
 
 ### Submodules
 
@@ -100,9 +86,17 @@ Debian image builds use that mutable codename tag without a digest pin.
 Change `DEBIAN_VERSION` in `versions/base-images.mk` manually after reviewing
 and validating a Debian major-release upgrade.
 
-The VCCS runtime build still reads its reviewed Luna tag from `versions/runtime-images.mk`:
+The VCCS runtime build reads its reviewed Luna base image from `versions/runtime-images.mk`:
 
+- `VCCS_LUNA_IMAGE_REPO`
 - `VCCS_LUNA_IMAGE_TAG`
+
+The Debian release in `VCCS_LUNA_IMAGE_TAG` must match `DEBIAN_VERSION`,
+because VCCS runs the FastAPI virtualenv built on the shared Debian base.
+
+The frontend Node.js major is defined by `NODE_MAJOR` in
+`versions/build-toolchain.mk`. The prebuild image imports Node.js and bundled
+npm from the official Node image for that major and the shared Debian codename.
 
 ### Release Workflow
 
@@ -148,11 +142,15 @@ make dockers
 
 ```
 ├── Makefile          # Main build orchestration
+├── .forgejo/         # Forgejo CI workflow
+├── docs/             # Architecture, operations, contracts, policy, and ADRs
 ├── versions/         # Reviewed image pins and related policy notes
 ├── build/            # Build image and source export
-│   └── repos/        # Git submodules
+│   ├── repos/        # Git submodules (upstream-owned)
+│   └── sources/      # Generated git archive exports (do not edit)
 ├── images/           # Runtime image implementations
 │   ├── prebuild/     # Base image with common dependencies
+│   ├── runtime_common/ # Shared Debian runtime parent
 │   ├── webapp/       # Webapp Docker image
 │   ├── worker/       # Worker Docker image
 │   ├── fastapi/      # FastAPI Docker image

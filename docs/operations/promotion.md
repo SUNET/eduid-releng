@@ -13,7 +13,7 @@ Document how already-built images move from testing to staging and production.
 
 ```mermaid
 flowchart LR
-	A[make dockers] --> B[local runtime images]
+	A[make VERSION=version dockers] --> B[local runtime images]
 	B --> C[make VERSION=version dockers_tagpush]
 	C --> D[testing tags]
 	D --> E[make VERSION=version staging_release]
@@ -30,7 +30,9 @@ flowchart LR
 make VERSION=<version> staging_release
 ```
 
-This pulls each `$(VERSION)-testing` image, retags it as `$(VERSION)-staging`, and pushes the staging tag.
+For most images, this pulls `$(VERSION)-testing`, retags it as
+`$(VERSION)-staging`, and pushes the staging tag. For `admintools`, the tags
+are `testing` and `staging` without a version prefix.
 
 ### Promote to production
 
@@ -38,7 +40,9 @@ This pulls each `$(VERSION)-testing` image, retags it as `$(VERSION)-staging`, a
 make VERSION=<version> production_release
 ```
 
-This pulls each `$(VERSION)-staging` image, retags it as `$(VERSION)-production`, and pushes the production tag.
+For most images, this pulls `$(VERSION)-staging`, retags it as
+`$(VERSION)-production`, and pushes the production tag. For `admintools`, the
+tags are `staging` and `production` without a version prefix.
 
 ## Services Included
 
@@ -55,6 +59,10 @@ Promotion covers:
 ## Important Current Property
 
 Promotion does not rebuild images. It only retags previously built images.
+
+Check the `admintools` source tag separately before each promotion. The supplied
+version does not select that image; promotion uses whichever image currently
+has the source tag.
 
 ## Current Limitation
 

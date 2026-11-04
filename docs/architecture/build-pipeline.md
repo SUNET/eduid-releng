@@ -17,12 +17,13 @@ Document the active build path from submodule checkout to runtime images.
 ```mermaid
 flowchart TD
 	A[build/repos submodules] --> B[build_prep and update_what_to_build]
-	B --> C[build/Makefile update]
-	C --> D[build/sources exports and revision.txt]
-	D --> E[make prebuild]
+	B --> E[make prebuild]
 	E --> F[eduid-prebuild]
 	F --> G[make build]
-	G --> H[eduid-build:VERSION]
+	G --> S[build/submodules.txt]
+	G --> C[build/Makefile docker invokes update]
+	C --> D[build/sources exports and revision.txt]
+	D --> H[eduid-build:VERSION]
 	B --> I[make runtime_common]
 	I --> J[eduid-runtime-common:VERSION]
 	H --> K[shared Python venvs]
@@ -50,7 +51,34 @@ flowchart TD
 
 This is the current release-input selection model. It is branch-driven rather than manifest-driven.
 
-### 2. Build the shared runtime parent
+### 2. Build the shared prebuild image
+
+`make prebuild` delegates to `images/prebuild/Makefile`, which builds `eduid-prebuild` from `images/prebuild/Dockerfile`.
+
+That image:
+
+- starts from `debian:${DEBIAN_VERSION}`
+- installs build dependencies for Python and frontend artifacts
+- creates `/opt/uv-bootstrap`
+- installs `uv` into that bootstrap environment with `pip`
+
+### 3. Export clean source trees
+
+`build/Makefile` target `update` removes any previous `build/sources/` tree and recreates it with `git archive` from each submodule.
+It runs as a prerequisite of `build/Makefile` target `docker`, which top-level `make build` invokes.
+
+For each exported repo it also writes a `revision.txt` file using `git show --summary`.
+
+### 4. Build shared artifacts
+
+`make build` writes `build/submodules.txt` and then builds `eduid-build:$VERSION` from `build/Dockerfile`.
+
+Inside that image, `build/Makefile` target `install` runs:
+
+- `setup-venv.sh` for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`
+- `build-js.sh` for `eduid-front` and `eduid-managed-accounts`
+
+### 5. Build the shared runtime parent
 
 `make runtime_common` delegates to `images/runtime_common/Makefile`, which
 builds `eduid-runtime-common:$VERSION` from `images/runtime_common/Dockerfile`.
@@ -63,31 +91,8 @@ That image:
 - creates the `eduid` user and group
 - creates `/var/log/eduid` and `/opt/eduid`
 
-### 3. Build the shared prebuild image
-
-`make prebuild` delegates to `images/prebuild/Makefile`, which builds `eduid-prebuild` from `images/prebuild/Dockerfile`.
-
-That image:
-
-- starts from `debian:${DEBIAN_VERSION}`
-- installs build dependencies for Python and frontend artifacts
-- creates `/opt/uv-bootstrap`
-- installs `uv` into that bootstrap environment with `pip`
-
-### 4. Export clean source trees
-
-`build/Makefile` target `update` removes any previous `build/sources/` tree and recreates it with `git archive` from each submodule.
-
-For each exported repo it also writes a `revision.txt` file using `git show --summary`.
-
-### 5. Build shared artifacts
-
-`make build` writes `build/submodules.txt` and then builds `eduid-build:$VERSION` from `build/Dockerfile`.
-
-Inside that image, `build/Makefile` target `install` runs:
-
-- `setup-venv.sh` for `admintools`, `fastapi`, `satosa_scim`, `webapp`, and `worker`
-- `build-js.sh` for `eduid-front` and `eduid-managed-accounts`
+This shared prerequisite runs once per Make invocation, not once per service.
+It can run alongside the shared artifact build when Make runs in parallel.
 
 ### 6. Build runtime images
 

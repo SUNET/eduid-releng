@@ -19,4 +19,4 @@ Provide a quick lookup table for the runtime images assembled by this repository
 | `admintools` | `eduid-runtime-common:$VERSION` | backend source + `/opt/eduid/admintools` | administrative command surface |
 | `satosa_scim` | `eduid-runtime-common:$VERSION` | backend source + `/opt/eduid/satosa_scim` | overlay patch step |
 | `html` | `eduid-runtime-common:$VERSION` | nginx/static assets + frontend bundles | no Python venv |
-| `vccs` | `${VCCS_LUNA_IMAGE_REF}` | backend source + runtime-built `/opt/eduid/fastapi` | Luna-backed exception path |
+| `vccs` | `${VCCS_LUNA_IMAGE_REF}` | backend source + shared `/opt/eduid/fastapi` copied from `eduid-build:$VERSION` | Luna-backed runtime-base exception |

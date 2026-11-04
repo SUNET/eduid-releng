@@ -216,16 +216,19 @@ Admintools has no such startup check.
 | `VERSION` and Docker image tags | Identify release images; not generated provenance files |
 | Files under `versions/` | Tracked base-image and toolchain inputs, not generated records of resolved image contents |
 | [SATOSA overlay manifest](../../images/satosa_scim/patches/manifest.txt) | Tracked instructions identifying overlays to apply, not an output inventory |
-| Upstream frontend revision files | Separate upstream build outputs, described below; their generation is bypassed by the current releng frontend build |
+| Upstream managed-accounts revision file | Separate upstream build output, described below; its generation is bypassed by the current releng frontend build |
 
-The standalone `make build` targets in the upstream frontend repositories
-write `build/revision.txt` for `eduid-front` and `dist/revision.txt` for
-`eduid-managed-accounts`. They record branch name, `git describe --always`
-output, and the latest commit details.
+The standalone `make build` target in `eduid-managed-accounts` writes
+`dist/revision.txt`. It records branch name, `git describe --always` output,
+and the latest commit details.
+
+`eduid-front` no longer has a `make build` target. Its npm build commands and
+local `make buildtest` target do not generate `build/revision.txt`.
 
 Releng's [build-js.sh](../../build/build-js.sh) invokes the frontend npm scripts
-or Vite directly, not those Makefile targets. These upstream generators are
-therefore not the producers of releng's root-level runtime revision records.
+or Vite directly, not the upstream Makefile build targets. The managed-accounts
+generator is therefore not the producer of releng's root-level runtime
+revision records.
 
 ## Limitations and Operational Interpretation
 

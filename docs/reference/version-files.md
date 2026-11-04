@@ -31,7 +31,8 @@ Owns service-specific runtime base review values:
 `platform.sunet.se/keyforge/luna-base`. `VCCS_LUNA_IMAGE_TAG` selects the
 mutable tag `trixie-10.9.4-123`. The VCCS Makefile combines them as
 `repo:tag`, without a digest, for the Docker build argument
-`VCCS_LUNA_IMAGE_REF`. The tag is also recorded in `/revision.txt`.
+`VCCS_LUNA_IMAGE_REF`. The tag is not recorded in `/revision.txt`; that file
+contains the backend revision metadata copied unchanged from the build image.
 
 ### `versions/build-toolchain.mk`
 

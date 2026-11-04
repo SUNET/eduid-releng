@@ -30,13 +30,15 @@ Capture the current reproducibility posture of the releng repository.
 ## What Is Still Mutable
 
 - release input selection is still branch-driven
-- frontend Node image tags and frontend `.nvmrc` selection remain mutable;
+- frontend Node image tags remain mutable; upstream `.nvmrc` selection controls
+  development and CI, not releng's release toolchain;
   locked dependencies alone do not guarantee byte-identical frontend artifacts
 - Debian image codename tags are mutable and are not digest-pinned
 - `uv` is installed from `pip` without a releng pin
 - `build/setup-venv.sh` installs `setuptools` separately into the target venv
 - Dockerfiles still use live `apt-get update` and `apt-get dist-upgrade`
-- `vccs` still has a divergent Python install path and a requirements fallback path
+- `vccs` uses a separate Luna runtime base that must remain compatible with the
+  copied shared FastAPI venv
 - the active CI workflow still sets `DOCKER_BUILDKIT=0`
 
 ## Current Rule
