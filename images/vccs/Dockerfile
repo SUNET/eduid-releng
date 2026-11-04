@@ -20,7 +20,9 @@ RUN apt-get update -o APT::Update::Error-Mode=any && \
     apt-get -y dist-upgrade && \
     apt-get install -y \
       curl \
-      python3-minimal \
+      # Uvicorn and VCCS startup use asyncio; the VCCS hasher uses hmac.
+      # python3 guarantees the stdlib without relying on APT recommendations.
+      python3 \
       xmlsec1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

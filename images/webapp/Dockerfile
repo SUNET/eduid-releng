@@ -15,7 +15,9 @@ RUN apt-get update && \
       libjpeg-dev \
       ghostscript \
       libxml2-utils \
-      python3-minimal \
+      # Webapps use Requests (http.cookiejar); backend sessions use hmac.
+      # python3 guarantees the stdlib without relying on APT recommendations.
+      python3 \
       xmlsec1 \
       zlib1g-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*

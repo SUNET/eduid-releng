@@ -8,7 +8,9 @@ FROM eduid-runtime-common:$VERSION
 
 RUN apt-get update && \
     apt-get install -y \
-      python3-minimal \
+      # Uvicorn workers use asyncio and http.
+      # python3 guarantees the stdlib without relying on APT recommendations.
+      python3 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /build/sources/eduid-backend/src /opt/eduid/src

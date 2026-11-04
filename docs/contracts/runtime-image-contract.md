@@ -24,6 +24,12 @@ The shared `runtime_common` parent is the layer that starts from
 system packages, the `eduid` user and group, and the standard runtime
 directories.
 
+All Python runtime images explicitly install Debian's `python3` package.
+The copied virtual environments use the system interpreter and standard
+library; they do not bundle the standard library. Depending on `python3`
+rather than `python3-minimal` keeps that library required even when APT
+recommendations are disabled.
+
 ## Image Roles
 
 - `webapp`: main web application runtime

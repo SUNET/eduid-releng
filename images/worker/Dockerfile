@@ -8,7 +8,10 @@ FROM eduid-runtime-common:$VERSION
 
 RUN apt-get update && \
     apt-get install -y \
-      python3-minimal \
+      # Celery's Billiard dependency: hmac for connection authentication.
+      # Message tasks use http.HTTPStatus; async queue workers use asyncio.
+      # python3 guarantees the stdlib without relying on APT recommendations.
+      python3 \
       xmlsec1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

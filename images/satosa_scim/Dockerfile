@@ -11,7 +11,9 @@ FROM eduid-runtime-common:$VERSION
 #   xmlsec1
 RUN apt-get update && \
     apt-get install -y \
-      python3-minimal \
+      # SATOSA's cookie handling imports http.cookies.
+      # python3 guarantees the stdlib without relying on APT recommendations.
+      python3 \
       xmlsec1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
