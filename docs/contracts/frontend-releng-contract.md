@@ -35,7 +35,9 @@ For `eduid-front` and `eduid-managed-accounts`, releng:
 
 Current build commands:
 
-- `eduid-front`: `npm run build-staging` and `npm run build-production`
+- `eduid-front`: `npm run build-staging` and `npm run build-production`, which
+  compile both variants into `build/` from a clean export without requiring Git
+  metadata
 - `eduid-managed-accounts`: `npx vite build`
 
 The build toolchain uses the Node.js major selected by `NODE_MAJOR` in
@@ -43,11 +45,37 @@ The build toolchain uses the Node.js major selected by `NODE_MAJOR` in
 image. The image tag combines that major with the shared Debian codename and
 `-slim`; `--pull` refreshes its latest published minor/patch. Both projects and
 their locked dependencies must support this shared toolchain. Releng does not
-add a custom Node.js/npm engine check or explicitly enable npm's strict engine
-enforcement. Compatibility validation should use clean installs with
+add a custom Node.js/npm engine check. The exported `eduid-front/.npmrc` enables
+strict engine enforcement, disables installation scripts and funding messages,
+and enables automatic audit feedback for developers and CI. Releng's explicit
+`--no-audit` overrides that audit setting during release installation; dedicated
+CI audit jobs provide the separate vulnerability checks.
+Managed accounts retains its own upstream npm
+configuration. Compatibility validation should use clean installs with
 `NPM_CONFIG_ENGINE_STRICT=true` and the build commands above.
 
 ## Delivery Contract
+
+The frontend owns its npm commands; releng owns installation orchestration,
+artifact placement, source revision metadata, image assembly, and promotion.
+`eduid-front` must export its committed `.npmrc`, dependency manifest, lockfile,
+and build configuration. Build tools require development dependencies.
+Releng's explicit installation flags remain shared with managed accounts.
+
+The frontend `build/` contains both `index.staging.html` / `index.staging.js`
+and `index.html` / `index.js`, with their referenced assets. Preserve the public
+paths and do not clean between compilations. Frontend compilation does
+not generate `build/revision.txt`; releng exports and packages revision metadata
+separately.
+JavaScript URLs retain the original HtmlWebpackPlugin compilation-hash query
+strings for cache invalidation. These are not a guarantee of byte-identical HTML
+across build environments.
+
+The frontend's local `make buildtest` uses `LOCAL_BUILDTEST=1` to write
+isolated outputs under `build-release/staging/` and `build-release/production/`.
+Releng must not set this developer-only flag. `clean-buildtest` removes only
+those local directories and is not part of release assembly. The runtime
+directory layout, nginx configuration, and public URLs are unchanged.
 
 The `html` runtime image is the integration point for:
 

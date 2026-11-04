@@ -18,6 +18,11 @@ Capture the current reproducibility posture of the releng repository.
 - source revisions are materialized through submodules and exported with `git archive`
 - frontend release builds require committed lockfiles
 - frontend installs use `npm ci --ignore-scripts --no-audit --no-fund`
+- `eduid-front` shares its installation policy through a committed `.npmrc` and
+  uses Git-independent cleanup, staging, and production npm commands in CI and releng
+- frontend JavaScript cache-busting query strings retain compilation hashes,
+  which can vary across build environments; CI checks compilation but does not
+  compare outputs from repeated builds
 - backend dependency installation uses `uv pip install --require-hashes`
 - Debian-based images use a reviewed codename in `DEBIAN_VERSION`
 - `vccs` uses a reviewed `VCCS_LUNA_IMAGE_TAG`
@@ -25,6 +30,8 @@ Capture the current reproducibility posture of the releng repository.
 ## What Is Still Mutable
 
 - release input selection is still branch-driven
+- frontend Node image tags and frontend `.nvmrc` selection remain mutable;
+  locked dependencies alone do not guarantee byte-identical frontend artifacts
 - Debian image codename tags are mutable and are not digest-pinned
 - `uv` is installed from `pip` without a releng pin
 - `build/setup-venv.sh` installs `setuptools` separately into the target venv

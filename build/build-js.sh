@@ -22,6 +22,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 
 # project specific build commands
 if [ "$NAME" == "eduid-front" ]; then
+    # TODO: Both builds write to build/; investigate a better output-isolation solution.
     npm run build-staging
     npm run build-production
     mkdir -p /opt/eduid/eduid-front

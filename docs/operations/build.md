@@ -101,8 +101,11 @@ base and imports only Node.js and bundled npm, creating the `npm` and `npx`
 command links locally. Debian provides system libraries and Python; the Debian
 `npm` package is not installed. Prebuild creation checks that Node.js,
 npm, and npx run. `build/build-js.sh` requires an exported lockfile and runs
-`npm ci --ignore-scripts --no-audit --no-fund`, without a custom engine check
-or explicit strict engine enforcement.
+`npm ci --ignore-scripts --no-audit --no-fund`, without a custom engine check.
+The exported `eduid-front/.npmrc` enables strict engine enforcement. Releng then
+runs `npm run build-staging` and `npm run build-production` in the clean export
+to compile both frontend variants; managed accounts
+retains its separate build command.
 
 The Makefile uses `--pull` to fetch the latest published minor/patch for the
 selected major and Debian variant. It does not search for an older compatible
