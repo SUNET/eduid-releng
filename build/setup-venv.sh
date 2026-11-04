@@ -29,8 +29,10 @@ export UV_PYTHON_DOWNLOADS=never
 
 uv venv --project "${backend_project}" --python "${system_python}" --relocatable --link-mode copy "${venv}"
 
-# Install requirements - first look for a specific ${NAME}_requirements.txt (we don't have any today)
-# and if not found - use the eduid-backend/requirements.txt.
+# Install requirements - prefer the per-service ${NAME}_requirements.txt from eduid-backend
+# (upstream provides them for webapp, worker, fastapi and satosa_scim, each with that
+# service's extras) and fall back to requirements/main.txt (base dependencies only,
+# currently used by admintools).
 req="${requirements_dir}/${NAME}_requirements.txt"
 test -f "${req}" || req="${requirements_dir}/main.txt"
 ls -l "$(dirname "${req}")"

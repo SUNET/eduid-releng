@@ -35,7 +35,7 @@ Check:
 Check:
 
 - the selected `VCCS_LUNA_IMAGE_TAG`
-- whether `fastapi_requirements.txt` failed and the Dockerfile fell back to `main.txt`
+- whether `build/sources/eduid-backend/requirements/fastapi_requirements.txt` exists; VCCS copies the `fastapi` venv from `eduid-build`, and `setup-venv.sh` uses `main.txt` (without the FastAPI extras) only when that file is missing
 - system package availability in the Luna-based image
 
 ### CI behavior differs from local behavior
