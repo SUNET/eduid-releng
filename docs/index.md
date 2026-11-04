@@ -14,9 +14,11 @@ It is organized by intent so operators and maintainers can find the current buil
 
 - Architecture: [architecture/overview.md](architecture/overview.md)
 - Build and release operations: [operations/build.md](operations/build.md)
+- Commands grouped by local, CI, and release workflows: [operations/workflows.md](operations/workflows.md)
 - Current contracts with upstream repos and runtime images: [contracts/backend-releng-contract.md](contracts/backend-releng-contract.md)
 - Reproducibility and supply-chain policy: [policy/reproducibility.md](policy/reproducibility.md)
 - Command and image lookup: [reference/make-targets.md](reference/make-targets.md)
+- Complete Makefile operator manual: [reference/makefile-operator-manual.md](reference/makefile-operator-manual.md)
 
 ## Layout
 

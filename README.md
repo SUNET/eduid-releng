@@ -60,6 +60,11 @@ The following Docker images are built:
 
 ## Usage
 
+See the [Makefile operator manual](docs/reference/makefile-operator-manual.md) for every
+top-level target, workflow examples, variable overrides, and operational cautions.
+For task-oriented commands grouped by local environments, CI, and release steps,
+see the [command workflows guide](docs/operations/workflows.md).
+
 ### Initial Setup
 
 ```bash
@@ -106,11 +111,13 @@ The release process follows a promotion model: **testing → staging → product
 #### 1. Build and Push to Testing
 
 ```bash
-make dockers
+make VERSION=<version> dockers
 make VERSION=<version> dockers_tagpush
 ```
 
-This builds images and pushes them with a `-testing` tag suffix.
+Use the same explicit version for both commands. This builds images and pushes
+them with a `-testing` tag suffix, except `admintools`, which uses the unversioned
+`testing` tag.
 
 #### 2. Promote to Staging
 
@@ -119,6 +126,7 @@ make VERSION=<version> staging_release
 ```
 
 Re-tags images from `-testing` to `-staging`.
+For `admintools`, the tags are `testing` and `staging` without a version prefix.
 
 #### 3. Promote to Production
 
@@ -127,6 +135,7 @@ make VERSION=<version> production_release
 ```
 
 Re-tags images from `-staging` to `-production`.
+For `admintools`, the tags are `staging` and `production` without a version prefix.
 
 ### Building from a Specific Branch
 
