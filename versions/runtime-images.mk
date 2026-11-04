@@ -12,5 +12,10 @@
 #
 # Keep the reviewed tag for operator readability. Tags are mutable and may
 # resolve to a different image over time; this selection is not digest-pinned.
+#
+# Coupling: the Debian release in VCCS_LUNA_IMAGE_TAG must match DEBIAN_VERSION
+# (versions/base-images.mk). The vccs image runs a venv built on the eduid-build
+# image (debian:$(DEBIAN_VERSION)) with this image's python3, so a mismatch breaks
+# the venv's Python minor version and native library compatibility at runtime.
 VCCS_LUNA_IMAGE_REPO := platform.sunet.se/keyforge/luna-base
 VCCS_LUNA_IMAGE_TAG := trixie-10.9.4-123

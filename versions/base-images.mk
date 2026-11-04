@@ -19,4 +19,9 @@
 #               https://www.debian.org/security/faq
 # Operational consequence: this image can lag the latest Debian security archive
 # between container-image republishes even when the codename remains unchanged.
+#
+# Coupling: the vccs image runs the eduid-build venv (built on this Debian release)
+# on top of the Luna base image. The Debian release in VCCS_LUNA_IMAGE_TAG
+# (versions/runtime-images.mk) must match DEBIAN_VERSION, otherwise the venv's
+# Python minor version and native libraries will not match the runtime interpreter.
 DEBIAN_VERSION := trixie
