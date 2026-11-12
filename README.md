@@ -27,6 +27,7 @@ The following Docker images are built:
 | `satosa_scim` | SATOSA SCIM integration |
 | `admintools` | Administrative tools |
 | `html` | Static HTML content |
+| `vccs` | VCCS service (built on the Luna HSM client image) |
 
 ## Usage
 
@@ -66,6 +67,9 @@ make VERSION=<version> dockers_tagpush
 
 This builds images and pushes them with a `-testing` tag suffix.
 
+The Forgejo workflow `.forgejo/workflows/build-action.yaml` is configured to run
+`make dockers dockers_tagpush` on every branch push (not on tags).
+
 #### 2. Promote to Staging
 
 ```bash
@@ -101,9 +105,57 @@ make dockers
 ├── fastapi/          # FastAPI Docker image
 ├── satosa_scim/      # SATOSA SCIM Docker image
 ├── admintools/       # Admin tools Docker image
-└── html/             # Static HTML Docker image
+├── html/             # Static HTML Docker image
+├── vccs/             # VCCS Docker image
+└── tools/            # Helper scripts (whats-deployed)
 ```
 
 ## Docker Registry
 
-Images are pushed to `docker.sunet.se/eduid/`.
+Images are pushed to `platform.sunet.se/eduid/` (the `REGISTRY` variable in the image Makefiles).
+
+## What is deployed?
+
+Image tags are build timestamps (`20261021T090739-production`). The images
+record the source commits they were built from, as the output of
+`git show --summary` for each exported source (the first line is `commit <sha>`):
+
+| Image | File | Source |
+|-------|------|--------|
+| `webapp`, `worker`, `fastapi`, `satosa_scim`, `admintools`, `vccs` | `/revision.txt` | `eduid-backend` |
+| `html` | `/revision-front.txt` | `eduid-front` |
+| `html` | `/revision-html.txt` | `eduid-html` |
+| `html` | `/revision-managed-accounts.txt` | `eduid-managed-accounts` |
+
+```bash
+docker run --rm --entrypoint cat platform.sunet.se/eduid/html:<tag> /revision-front.txt
+```
+
+`tools/whats-deployed` answers "which commits are in staging and production?".
+It reads the current image tags from `eduid_versions.yaml` in `eduid-cosmos`
+(staging) and `eduid-ops` (production), then finds the source commits:
+
+1. from the revision files above, read from the `webapp` and `html` images
+   (`docker run --rm --entrypoint cat`, so only `cat` runs). Images that are
+   not present locally are skipped unless `--pull` is given, or otherwise
+2. from the gitlinks of the last releng commit made at or before the build time
+   in the version (approximate, derived from git only).
+
+It prints each commit with date, subject and a GitHub link, and says per version
+whether the result was read from the images or derived from git.
+
+```bash
+tools/whats-deployed                    # latest version in staging and production
+tools/whats-deployed production --pull  # pull the images to read their revision files
+tools/whats-deployed 20261021T090739    # one specific version
+tools/whats-deployed --all              # every version in use, not just the latest
+tools/whats-deployed -h                 # all options
+```
+
+The other checkouts are expected next to this one (`../eduid-ops`,
+`../eduid-cosmos`, `../eduid-backend`, `../eduid-front`, `../eduid-html`,
+`../eduid-managed-accounts`); use `--ops`, `--backend` etc. to point elsewhere.
+Missing checkouts are reported and the SHAs are still printed. Nothing is
+fetched unless `--fetch` is given, and `--dry-run` shows what `--fetch` and
+`--pull` would do. Tags that nothing references (removed services, or ones
+deployed another way such as the navet service) are ignored.
