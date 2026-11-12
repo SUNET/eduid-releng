@@ -70,15 +70,18 @@ def read_tags(repo):
     for line in path.read_text().splitlines():
         m = re.match(r"^eduid_version_(\w+?)_tag:\s*(\S+)", line)
         if m:
-            tags[m.group(1)] = m.group(2)
+            tags[m.group(1)] = m.group(2).strip("'\"")
     return tags
 
 
 def used_services(repo):
     """Services whose tag key is referenced by an uncommented line outside the versions file."""
-    out = git(repo, "grep", "-I", "-h", "-E", r"eduid_version_[a-z0-9_]+_tag", "--", f":!{VERSIONS_FILE}")
+    r = subprocess.run(["git", "-C", str(repo), "grep", "-I", "-h", "-E", r"eduid_version_[a-z0-9_]+_tag",
+                        "--", f":!{VERSIONS_FILE}"], capture_output=True, text=True)
+    if r.returncode > 1:  # 1 just means no match; anything else is a real failure
+        return None
     used = set()
-    for line in (out or "").splitlines():
+    for line in r.stdout.splitlines():
         if line.lstrip().startswith("#"):
             continue
         used.update(re.findall(r"eduid_version_([a-z0-9_]+?)_tag", line))
@@ -109,12 +112,22 @@ def resolve(version, tag, args, repos, label_tools, warn):
     """Return ({submodule: (sha, source)}, releng_commit_or_None)."""
     shas = {}
     if label_tools:
-        ref = f"{args.registry}/eduid/{args.image}:{tag}"
+        # a bare version has no published tag of its own; the suffixed tags are re-tags of one image
+        tags = [tag] if TAG_RE.match(tag) else [f"{tag}-{e}" for e in ("production", "staging", "testing")]
+        refs = [f"{args.registry}/eduid/{args.image}:{t}" for t in tags]
         labels = None
-        for t in label_tools:
-            labels = labels_for(ref, t, args.pull)
+        # local images first, then (only with --pull) the registry
+        for pull in ([False, True] if args.pull else [False]):
+            for ref in refs:
+                for t in label_tools:
+                    labels = labels_for(ref, t, pull)
+                    if labels is not None:
+                        break
+                if labels is not None:
+                    break
             if labels is not None:
                 break
+        ref = refs[0] if len(refs) == 1 else f"{refs[0].rsplit('-', 1)[0]}-{{production,staging,testing}}"
         if labels is None:
             warn(f"could not read labels from {ref} (not pulled locally? use --pull; login needed?)")
         else:
@@ -260,10 +273,12 @@ def main():
             head = git(repo, "log", "-1", "--format=%h %cs %s") or "?"
             groups = defaultdict(lambda: [None, []])
             other = []
-            used = set() if args.include_unused else used_services(repo)
+            used = None if args.include_unused else used_services(repo)
+            if used is None and not args.include_unused and not args.quiet:
+                print(f"warning: could not search {dirname} for tag references; not ignoring any tags", file=sys.stderr)
             unused = []
             for svc, tag in sorted(tags.items()):
-                if used and svc not in used:
+                if used is not None and svc not in used:
                     unused.append(svc)
                     continue
                 m = TAG_RE.match(tag)
@@ -275,7 +290,7 @@ def main():
             jobs.append((w, dirname, head, groups, other, unused))
         elif VERSION_RE.match(w.split("-")[0]):
             v = w.split("-")[0]
-            jobs.append((f"version {v}", None, None, {v: [w if "-" in w else v, []]}, [], []))
+            jobs.append((f"version {v}", None, None, {v: [w, []]}, [], []))
         else:
             ap.error(f"unknown argument {w!r}")
 

@@ -127,11 +127,11 @@ records the source commits it was built from as Docker labels, written by
 | `se.sunet.eduid.front-rev` | `eduid-front` commit |
 | `se.sunet.eduid.html-rev` | `eduid-html` commit |
 | `se.sunet.eduid.managed-accounts-rev` | `eduid-managed-accounts` commit |
-| `se.sunet.eduid.releng-rev` | this repository's commit |
 | `se.sunet.eduid.version` | the build `VERSION` |
 
-The labels are the checked-out HEADs of the submodules, which is what
-`build/Makefile` exports. Images built before the labels were added have none.
+The commits are read from `/build/submodules.txt` in the `eduid-build:<VERSION>`
+image that the runtime images copy their sources from, so rebuilding a single
+image after the submodules moved still labels the sources it really contains. Images built before the labels were added have none.
 
 ```bash
 docker image inspect --format '{{json .Config.Labels}}' platform.sunet.se/eduid/webapp:<tag>
