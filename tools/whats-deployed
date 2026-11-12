@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""Report which source commits are deployed in staging and production."""
+
+import argparse
+import datetime as dt
+import json
+import re
+import shutil
+import subprocess
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SIBLINGS = ROOT.parent
+VERSIONS_FILE = "global/overlay/etc/hiera/data/eduid_versions.yaml"
+SUBMODULES = ["eduid-backend", "eduid-front", "eduid-html", "eduid-managed-accounts"]
+LABEL_PREFIX = "se.sunet.eduid."  # e.g. se.sunet.eduid.backend-rev
+GITHUB = "https://github.com/SUNET"
+ENVS = {"staging": ("cosmos", "eduid-cosmos"), "production": ("ops", "eduid-ops")}
+TAG_RE = re.compile(r"^(\d{8}T\d{6})-(testing|staging|production)$")
+VERSION_RE = re.compile(r"^\d{8}T\d{6}$")
+STALE_AFTER = dt.timedelta(days=1)
+DRY_RUN = False
+
+EPILOG = """\
+How it works:
+  1. Reads the per-service image tags from eduid_versions.yaml in eduid-cosmos
+     (staging) and eduid-ops (production), and groups services by version.
+  2. For each version it finds the source commits of the four submodules:
+       a. from image labels (%(p)s<name>-rev, e.g. %(p)sbackend-rev), read from
+          the image with docker (local image; --pull fetches missing ones),
+          when the images carry them;
+       b. otherwise from the gitlinks of the last eduid-releng commit made at
+          or before the build time encoded in the version (UTC timestamp).
+  3. Looks the commits up in sibling checkouts (default: next to eduid-releng)
+     and prints date, subject and a GitHub link.
+
+Missing sibling checkouts are reported; the SHA is still printed when known.
+Nothing is fetched unless --fetch is given.
+
+Examples:
+  whats-deployed                       staging and production
+  whats-deployed production --all     every version in use, not just the latest
+  whats-deployed production -v         list every service per version
+  whats-deployed 20261021T090739       resolve one specific version
+  whats-deployed --ops ~/src/eduid-ops --backend ~/src/eduid-backend
+""" % {"p": LABEL_PREFIX}
+
+
+def git(repo, *args):
+    r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def is_repo(path):
+    return path is not None and path.is_dir() and git(path, "rev-parse", "--git-dir") is not None
+
+
+def parse_version(v):
+    return dt.datetime.strptime(v, "%Y%m%dT%H%M%S").replace(tzinfo=dt.timezone.utc)
+
+
+def read_tags(repo):
+    """Return {service: tag} from eduid_versions.yaml."""
+    path = repo / VERSIONS_FILE
+    if not path.is_file():
+        return None
+    tags = {}
+    for line in path.read_text().splitlines():
+        m = re.match(r"^eduid_version_(\w+?)_tag:\s*(\S+)", line)
+        if m:
+            tags[m.group(1)] = m.group(2)
+    return tags
+
+
+def used_services(repo):
+    """Services whose tag key is referenced by an uncommented line outside the versions file."""
+    out = git(repo, "grep", "-I", "-h", "-E", r"eduid_version_[a-z0-9_]+_tag", "--", f":!{VERSIONS_FILE}")
+    used = set()
+    for line in (out or "").splitlines():
+        if line.lstrip().startswith("#"):
+            continue
+        used.update(re.findall(r"eduid_version_([a-z0-9_]+?)_tag", line))
+    return used
+
+
+def labels_for(ref, tool, pull=False):
+    """Read image labels with docker (local image, optionally pulled first)."""
+    try:
+        if tool == "docker":
+            fmt = ["docker", "image", "inspect", "--format", "{{json .Config.Labels}}", ref]
+            out = subprocess.run(fmt, capture_output=True, text=True, timeout=30)
+            if out.returncode != 0 and pull and DRY_RUN:
+                print(f"dry-run: would run: docker pull {ref}", file=sys.stderr)
+                return None
+            if out.returncode != 0 and pull:
+                print(f"pulling {ref} ...", file=sys.stderr)
+                if subprocess.run(["docker", "pull", "--quiet", ref], stdout=subprocess.DEVNULL,
+                                  timeout=600).returncode != 0:
+                    return None
+                out = subprocess.run(fmt, capture_output=True, text=True, timeout=30)
+            return (json.loads(out.stdout) or {}) if out.returncode == 0 else None
+    except (subprocess.TimeoutExpired, ValueError):
+        return None
+
+
+def resolve(version, tag, args, repos, label_tools, warn):
+    """Return ({submodule: (sha, source)}, releng_commit_or_None)."""
+    shas = {}
+    if label_tools:
+        ref = f"{args.registry}/eduid/{args.image}:{tag}"
+        labels = None
+        for t in label_tools:
+            labels = labels_for(ref, t, args.pull)
+            if labels is not None:
+                break
+        if labels is None:
+            warn(f"could not read labels from {ref} (not pulled locally? use --pull; login needed?)")
+        else:
+            found = {s: labels.get(LABEL_PREFIX + s.removeprefix("eduid-") + "-rev") for s in SUBMODULES}
+            if all(found.values()):
+                shas = {s: (v, "image") for s, v in found.items()}
+            elif any(found.values()):
+                warn(f"image {ref} has only some {LABEL_PREFIX}*-rev labels; ignoring them")
+            else:
+                warn(f"image {ref} has no {LABEL_PREFIX}*-rev labels; falling back to git")
+
+    releng_commit = None
+    if not shas:
+        releng = repos["releng"]
+        ts = parse_version(version)
+        releng_commit = git(releng, "rev-list", "-1", "--first-parent",
+                            f"--before={ts.isoformat()}", args.releng_ref)
+        if not releng_commit:
+            warn(f"no eduid-releng commit at or before {ts:%Y-%m-%d %H:%M}Z on {args.releng_ref}")
+        else:
+            cdate = dt.datetime.fromisoformat(git(releng, "log", "-1", "--format=%cI", releng_commit))
+            if ts - cdate > STALE_AFTER:
+                warn(f"newest eduid-releng commit ({releng_commit[:8]}, {cdate:%Y-%m-%d}) is >1 day older than "
+                     f"the build; releng may be stale or the build had no bump (try --fetch)")
+            for s in SUBMODULES:
+                line = git(releng, "ls-tree", releng_commit, f"build/repos/{s}")
+                if line:
+                    shas[s] = (line.split()[2], "git")
+                else:
+                    warn(f"{s}: no gitlink in releng {releng_commit[:8]}")
+    return shas, releng_commit
+
+
+def show_repo_line(name, sha, source, repo, ts, warn):
+    url = f"{GITHUB}/{name}/commit/{sha}"
+    if repo is None:
+        print(f"    {name:<24} {sha[:10]}  [checkout missing]  {url}")
+        return
+    info = git(repo, "log", "-1", "--format=%cI|%s", sha)
+    if info is None:
+        print(f"    {name:<24} {sha[:10]}  [not in local checkout]  {url}")
+        warn(f"{name}: {sha[:10]} not found in {repo} (fetch it?)")
+        return
+    cdate, subject = info.split("|", 1)
+    print(f"    {name:<24} {sha[:10]}  {cdate[:10]}  {subject[:60]}")
+    print(f"    {'':<24} {url}")
+    if source == "git" and dt.datetime.fromisoformat(cdate) > ts:
+        warn(f"{name}: commit {sha[:10]} is newer than the build time; the timestamp lookup is probably wrong")
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        prog="whats-deployed",
+        description="Show which source commits (eduid-backend, -front, -html, -managed-accounts) "
+                    "are in the deployed eduID images.",
+        epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("what", nargs="*", metavar="staging|production|VERSION",
+                    help="environments or explicit versions (e.g. 20261021T090739); default: staging production")
+    g = ap.add_argument_group("paths (default: siblings of eduid-releng)")
+    g.add_argument("--releng", type=Path, default=ROOT, help="eduid-releng checkout (default: this repo)")
+    g.add_argument("--ops", type=Path, default=SIBLINGS / "eduid-ops", help="eduid-ops checkout (production)")
+    g.add_argument("--cosmos", type=Path, default=SIBLINGS / "eduid-cosmos", help="eduid-cosmos checkout (staging)")
+    for s in SUBMODULES:
+        g.add_argument(f"--{s.removeprefix('eduid-')}", type=Path, default=SIBLINGS / s, metavar="PATH",
+                       help=f"{s} checkout")
+    o = ap.add_argument_group("other options")
+    o.add_argument("--releng-ref", default=None, help="releng ref to search (default: origin/main, else HEAD)")
+    o.add_argument("--registry", default="platform.sunet.se", help="registry for label lookup (default: %(default)s)")
+    o.add_argument("--image", default="webapp", help="image to read labels from (default: %(default)s)")
+    o.add_argument("--pull", action="store_true",
+                   help="docker pull images that are not present locally, to read their labels "
+                        "(without it only local images are checked)")
+    o.add_argument("--no-labels", action="store_true", help="skip image label lookup")
+    o.add_argument("--fetch", action="store_true", help="run git fetch in releng and the source checkouts first (uses each checkout's own remote)")
+    o.add_argument("-a", "--all", action="store_true",
+                   help="show every version in use per environment (default: only the latest)")
+    o.add_argument("-q", "--quiet", action="store_true",
+                   help="suppress notes and warnings (ignored tags, hidden older versions, non-main branches, "
+                        "missing checkouts, stale releng, lookup problems); results and errors are still shown")
+    o.add_argument("-n", "--dry-run", action="store_true",
+                   help="do not fetch or pull; print what --fetch and --pull would run (and which remote), "
+                        "still doing the read-only lookups and branch checks")
+    o.add_argument("--include-unused", action="store_true",
+                   help="also count tags in eduid_versions.yaml that nothing references (removed services, or ones "
+                        "deployed another way such as the navet Java service)")
+    o.add_argument("-v", "--verbose", action="store_true", help="list all services for every version")
+    args = ap.parse_args()
+    global DRY_RUN
+    DRY_RUN = args.dry_run
+
+    repos = {"releng": args.releng, "ops": args.ops, "cosmos": args.cosmos}
+    for s in SUBMODULES:
+        repos[s] = getattr(args, s.removeprefix("eduid-").replace("-", "_"))
+    missing = {k: p for k, p in repos.items() if not is_repo(p)}
+    for k, p in missing.items():
+        if not args.quiet:
+            print(f"warning: no git checkout for {k} at {p}; use --{k.replace('_', '-')} PATH", file=sys.stderr)
+    if "releng" in missing:
+        sys.exit("error: eduid-releng checkout is required")
+    repos = {k: (None if k in missing else p) for k, p in repos.items()}
+
+    for k, p in repos.items():
+        if p is not None:
+            br = git(p, "branch", "--show-current") or "(detached HEAD)"
+            if br not in ("main", "master") and not args.quiet:
+                note = "; --fetch will use this branch's remote" if args.fetch else ""
+                print(f"warning: {k} is on branch {br}, not main/master{note}", file=sys.stderr)
+
+    if args.fetch:
+        for k, p in repos.items():
+            if p is not None:
+                print(f"fetching {k} ...", file=sys.stderr)
+                if DRY_RUN:
+                    br = git(p, "branch", "--show-current")
+                    remote = (git(p, "config", f"branch.{br}.remote") if br else None) or "origin"
+                    print(f"dry-run: would run: git -C {p} fetch  (remote: {remote})", file=sys.stderr)
+                    continue
+                subprocess.run(["git", "-C", str(p), "fetch", "--quiet"], check=False)
+    if args.releng_ref is None:
+        args.releng_ref = "origin/main" if git(repos["releng"], "rev-parse", "--verify", "-q", "origin/main") else "HEAD"
+
+    label_tools = []
+    if not args.no_labels:
+        if shutil.which("docker"):
+            label_tools = ["docker"]
+        else:
+            if not args.quiet:
+                print("note: docker not found; skipping image label lookup", file=sys.stderr)
+
+    wanted = args.what or ["staging", "production"]
+    jobs = []  # (title, {version: (tag, [services])}, header)
+    for w in wanted:
+        if w in ENVS:
+            key, dirname = ENVS[w]
+            repo = repos[key]
+            if repo is None:
+                print(f"\n== {w}: skipped, {dirname} checkout missing (use --{key})")
+                continue
+            tags = read_tags(repo)
+            if tags is None:
+                print(f"\n== {w}: skipped, {VERSIONS_FILE} not found in {repo}")
+                continue
+            head = git(repo, "log", "-1", "--format=%h %cs %s") or "?"
+            groups = defaultdict(lambda: [None, []])
+            other = []
+            used = set() if args.include_unused else used_services(repo)
+            unused = []
+            for svc, tag in sorted(tags.items()):
+                if used and svc not in used:
+                    unused.append(svc)
+                    continue
+                m = TAG_RE.match(tag)
+                if m:
+                    groups[m.group(1)][0] = tag
+                    groups[m.group(1)][1].append(svc)
+                else:
+                    other.append(f"{svc}={tag}")
+            jobs.append((w, dirname, head, groups, other, unused))
+        elif VERSION_RE.match(w.split("-")[0]):
+            v = w.split("-")[0]
+            jobs.append((f"version {v}", None, None, {v: [w if "-" in w else v, []]}, [], []))
+        else:
+            ap.error(f"unknown argument {w!r}")
+
+    for title, dirname, head, groups, other, unused in jobs:
+        print(f"\n== {title}" + (f"  ({dirname} @ {head})" if dirname else ""))
+        total = sum(len(g[1]) for g in groups.values())
+        if unused and not args.quiet:
+            print(f"  ({len(unused)} tag(s) ignored: no uncommented line uses them, so the service is removed or "
+                  f"deployed another way, e.g. not built by releng: {', '.join(unused)}; --include-unused to keep)")
+        shown = sorted(groups, reverse=True)
+        if not args.all and len(shown) > 1:
+            hidden = shown[1:]
+            shown = shown[:1]
+            n = sum(len(groups[v][1]) for v in hidden)
+            if not args.quiet:
+                print(f"  ({n} service(s) on {len(hidden)} older version(s) not shown; use --all)")
+        for version in shown:
+            tag, svcs = groups[version]
+            ts = parse_version(version)
+            print(f"\n  {version}  ({ts:%Y-%m-%d %H:%M}Z)" + (f"  {len(svcs)}/{total} services" if svcs else ""))
+            if svcs and (args.verbose or len(svcs) <= 12):
+                print("    services: " + ", ".join(svcs))
+            warnings = []
+            shas, rc = resolve(version, tag, args, repos, label_tools, warnings.append)
+            if shas and all(v[1] == "image" for v in shas.values()):
+                how = "read from image labels"
+            elif label_tools:
+                how = "derived from git only (image not read: no labels or image unavailable)"
+            else:
+                how = "derived from git only (image lookup disabled)"
+            print(f"    source: {how}")
+            if rc:
+                print(f"    eduid-releng commit: {rc[:10]}  {git(repos['releng'], 'log', '-1', '--format=%cs %s', rc)[:70]}")
+            for s in SUBMODULES:
+                if s in shas:
+                    show_repo_line(s, shas[s][0], shas[s][1], repos[s], ts, warnings.append)
+                    if repos[s] is None:
+                        warnings.append(f"{s}: checkout missing; use --{s.removeprefix('eduid-')} PATH for details")
+            for w in warnings:
+                if not args.quiet:
+                    print(f"    ! {w}")
+        if other and args.verbose:
+            print("\n  non-eduid tags (not resolved): " + ", ".join(other))
+
+
+if __name__ == "__main__":
+    main()
