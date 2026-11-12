@@ -121,19 +121,33 @@ def read_image_file(ref, path, pull=False):
         return None
 
 
-def image_refs(image, tag, registry):
-    # a bare version has no published tag of its own; the suffixed tags are re-tags of one image
-    tags = [tag] if TAG_RE.match(tag) else [f"{tag}-{e}" for e in ("production", "staging", "testing")]
-    return [f"{registry}/eduid/{image}:{t}" for t in tags]
+def image_refs(image, tags, registry):
+    """Candidate refs for an image: every configured tag of the version, in order.
+
+    A bare version has no published tag of its own; the suffixed tags are re-tags of one image.
+    """
+    cands = []
+    for tag in tags:
+        for t in [tag] if TAG_RE.match(tag) else [f"{tag}-{e}" for e in ("production", "staging", "testing")]:
+            if t not in cands:
+                cands.append(t)
+    return [f"{registry}/eduid/{image}:{t}" for t in cands]
 
 
-def resolve(version, tag, args, repos, use_images, warn):
+def describe_refs(refs):
+    if len(refs) == 1:
+        return refs[0]
+    base = refs[0].rsplit("-", 1)[0]
+    return f"{base}-{{{','.join(r.rsplit('-', 1)[1] for r in refs)}}}"
+
+
+def resolve(version, tags, args, repos, use_images, warn):
     """Return ({submodule: (sha, source)}, releng_commit_or_None); source is "image" or "git"."""
     shas = {}
     if use_images:
         unreadable = defaultdict(list)
         for sub, (image, path) in IMAGE_FILES.items():
-            refs = image_refs(image, tag, args.registry)
+            refs = image_refs(image, tags, args.registry)
             text = None
             for pull in ([False, True] if args.pull else [False]):  # local images first, then the registry
                 for ref in refs:
@@ -148,8 +162,7 @@ def resolve(version, tag, args, repos, use_images, warn):
             else:
                 unreadable[image].append(path)
         for image, paths in unreadable.items():
-            r = image_refs(image, tag, args.registry)
-            where = r[0] if len(r) == 1 else f"{r[0].rsplit('-', 1)[0]}-{{production,staging,testing}}"
+            where = describe_refs(image_refs(image, tags, args.registry))
             warn(f"could not read {', '.join(paths)} from {where} "
                  f"(not pulled locally? use --pull; login needed? older image without the file?)")
 
@@ -284,7 +297,7 @@ def main():
                 print(f"\n== {w}: skipped, {VERSIONS_FILE} not found in {repo}")
                 continue
             head = git(repo, "log", "-1", "--format=%h %cs %s") or "?"
-            groups = defaultdict(lambda: [None, []])
+            groups = defaultdict(lambda: [[], []])
             other = []
             used = None if args.include_unused else used_services(repo)
             if used is None and not args.include_unused and not args.quiet:
@@ -296,14 +309,15 @@ def main():
                     continue
                 m = TAG_RE.match(tag)
                 if m:
-                    groups[m.group(1)][0] = tag
+                    if tag not in groups[m.group(1)][0]:
+                        groups[m.group(1)][0].append(tag)
                     groups[m.group(1)][1].append(svc)
                 else:
                     other.append(f"{svc}={tag}")
             jobs.append((w, dirname, head, groups, other, unused))
         elif VERSION_RE.match(w.split("-")[0]):
             v = w.split("-")[0]
-            jobs.append((f"version {v}", None, None, {v: [w, []]}, [], []))
+            jobs.append((f"version {v}", None, None, {v: [[w], []]}, [], []))
         else:
             ap.error(f"unknown argument {w!r}")
 
@@ -321,13 +335,13 @@ def main():
             if not args.quiet:
                 print(f"  ({n} service(s) on {len(hidden)} older version(s) not shown; use --all)")
         for version in shown:
-            tag, svcs = groups[version]
+            tags, svcs = groups[version]
             ts = parse_version(version)
             print(f"\n  {version}  ({ts:%Y-%m-%d %H:%M}Z)" + (f"  {len(svcs)}/{total} services" if svcs else ""))
             if svcs and (args.verbose or len(svcs) <= 12):
                 print("    services: " + ", ".join(svcs))
             warnings = []
-            shas, rc = resolve(version, tag, args, repos, use_images, warnings.append)
+            shas, rc = resolve(version, tags, args, repos, use_images, warnings.append)
             from_img = [x for x in SUBMODULES if shas.get(x, (None, None))[1] == "image"]
             from_git = [x for x in SUBMODULES if x in shas and x not in from_img]
             used_images = sorted({IMAGE_FILES[x][0] for x in from_img})
