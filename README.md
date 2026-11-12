@@ -107,7 +107,6 @@ make dockers
 ├── admintools/       # Admin tools Docker image
 ├── html/             # Static HTML Docker image
 ├── vccs/             # VCCS Docker image
-├── labels.mk         # Source-commit image labels, included by the image Makefiles
 └── tools/            # Helper scripts (whats-deployed)
 ```
 
@@ -117,41 +116,37 @@ Images are pushed to `platform.sunet.se/eduid/` (the `REGISTRY` variable in the 
 
 ## What is deployed?
 
-Image tags are build timestamps (`20261021T090739-production`). Each image also
-records the source commits it was built from as Docker labels, written by
-`labels.mk` at build time:
+Image tags are build timestamps (`20261021T090739-production`). The images
+record the source commits they were built from, as the output of
+`git show --summary` for each exported source (the first line is `commit <sha>`):
 
-| Label | Value |
-|-------|-------|
-| `se.sunet.eduid.backend-rev` | `eduid-backend` commit |
-| `se.sunet.eduid.front-rev` | `eduid-front` commit |
-| `se.sunet.eduid.html-rev` | `eduid-html` commit |
-| `se.sunet.eduid.managed-accounts-rev` | `eduid-managed-accounts` commit |
-| `se.sunet.eduid.version` | the build `VERSION` |
-
-The commits are read from `/build/submodules.txt` in the `eduid-build:<VERSION>`
-image that the runtime images copy their sources from, so rebuilding a single
-image after the submodules moved still labels the sources it really contains. Images built before the labels were added have none.
+| Image | File | Source |
+|-------|------|--------|
+| `webapp`, `worker`, `fastapi`, `satosa_scim`, `admintools`, `vccs` | `/revision.txt` | `eduid-backend` |
+| `html` | `/revision-front.txt` | `eduid-front` |
+| `html` | `/revision-html.txt` | `eduid-html` |
+| `html` | `/revision-managed-accounts.txt` | `eduid-managed-accounts` |
 
 ```bash
-docker image inspect --format '{{json .Config.Labels}}' platform.sunet.se/eduid/webapp:<tag>
+docker run --rm --entrypoint cat platform.sunet.se/eduid/html:<tag> /revision-front.txt
 ```
 
 `tools/whats-deployed` answers "which commits are in staging and production?".
 It reads the current image tags from `eduid_versions.yaml` in `eduid-cosmos`
 (staging) and `eduid-ops` (production), then finds the source commits:
 
-1. from the image labels, if the image is available locally (`--pull` runs
-   `docker pull` for missing ones), or otherwise
+1. from the revision files above, read from the `webapp` and `html` images
+   (`docker run --rm --entrypoint cat`, so only `cat` runs). Images that are
+   not present locally are skipped unless `--pull` is given, or otherwise
 2. from the gitlinks of the last releng commit made at or before the build time
    in the version (approximate, derived from git only).
 
 It prints each commit with date, subject and a GitHub link, and says per version
-whether the result was read from the image or derived from git.
+whether the result was read from the images or derived from git.
 
 ```bash
 tools/whats-deployed                    # latest version in staging and production
-tools/whats-deployed production --pull  # pull the images to read their labels
+tools/whats-deployed production --pull  # pull the images to read their revision files
 tools/whats-deployed 20261021T090739    # one specific version
 tools/whats-deployed --all              # every version in use, not just the latest
 tools/whats-deployed -h                 # all options

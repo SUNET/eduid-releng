@@ -1,11 +1,9 @@
-include ../labels.mk
-
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/fastapi
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" $(LABEL_ARGS) --tag "eduid-fastapi:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-fastapi:$(VERSION)" .
 	docker tag "eduid-fastapi:$(VERSION)" "eduid-fastapi:latest"
 
 docker_tagpush:

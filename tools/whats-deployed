@@ -3,7 +3,6 @@
 
 import argparse
 import datetime as dt
-import json
 import re
 import shutil
 import subprocess
@@ -15,22 +14,33 @@ ROOT = Path(__file__).resolve().parent.parent
 SIBLINGS = ROOT.parent
 VERSIONS_FILE = "global/overlay/etc/hiera/data/eduid_versions.yaml"
 SUBMODULES = ["eduid-backend", "eduid-front", "eduid-html", "eduid-managed-accounts"]
-LABEL_PREFIX = "se.sunet.eduid."  # e.g. se.sunet.eduid.backend-rev
+# Where each source commit is recorded inside the images: `git show --summary` of the exported
+# source, copied in by the image Dockerfiles. Its first line is "commit <sha>".
+IMAGE_FILES = {
+    "eduid-backend": ("webapp", "/revision.txt"),
+    "eduid-front": ("html", "/revision-front.txt"),
+    "eduid-html": ("html", "/revision-html.txt"),
+    "eduid-managed-accounts": ("html", "/revision-managed-accounts.txt"),
+}
+COMMIT_RE = re.compile(r"^commit ([0-9a-f]{40})\b")
 GITHUB = "https://github.com/SUNET"
 ENVS = {"staging": ("cosmos", "eduid-cosmos"), "production": ("ops", "eduid-ops")}
 TAG_RE = re.compile(r"^(\d{8}T\d{6})-(testing|staging|production)$")
 VERSION_RE = re.compile(r"^\d{8}T\d{6}$")
 STALE_AFTER = dt.timedelta(days=1)
 DRY_RUN = False
+_DRY_SEEN = set()
+_PULL_FAILED = set()
 
 EPILOG = """\
 How it works:
   1. Reads the per-service image tags from eduid_versions.yaml in eduid-cosmos
      (staging) and eduid-ops (production), and groups services by version.
   2. For each version it finds the source commits of the four submodules:
-       a. from image labels (%(p)s<name>-rev, e.g. %(p)sbackend-rev), read from
-          the image with docker (local image; --pull fetches missing ones),
-          when the images carry them;
+       a. from the revision files inside the images: /revision.txt in the webapp
+          image (eduid-backend) and /revision-{front,html,managed-accounts}.txt
+          in the html image. They are read with `docker run --entrypoint cat`
+          (only cat runs) from local images; --pull fetches missing ones;
        b. otherwise from the gitlinks of the last eduid-releng commit made at
           or before the build time encoded in the version (UTC timestamp).
   3. Looks the commits up in sibling checkouts (default: next to eduid-releng)
@@ -45,7 +55,7 @@ Examples:
   whats-deployed production -v         list every service per version
   whats-deployed 20261021T090739       resolve one specific version
   whats-deployed --ops ~/src/eduid-ops --backend ~/src/eduid-backend
-""" % {"p": LABEL_PREFIX}
+"""
 
 
 def git(repo, *args):
@@ -88,59 +98,64 @@ def used_services(repo):
     return used
 
 
-def labels_for(ref, tool, pull=False):
-    """Read image labels with docker (local image, optionally pulled first)."""
+def read_image_file(ref, path, pull=False):
+    """Contents of a file in a local image (docker run --entrypoint cat), pulling it first if asked."""
     try:
-        if tool == "docker":
-            fmt = ["docker", "image", "inspect", "--format", "{{json .Config.Labels}}", ref]
-            out = subprocess.run(fmt, capture_output=True, text=True, timeout=30)
-            if out.returncode != 0 and pull and DRY_RUN:
-                print(f"dry-run: would run: docker pull {ref}", file=sys.stderr)
+        if subprocess.run(["docker", "image", "inspect", ref], capture_output=True, timeout=30).returncode != 0:
+            if not pull or ref in _PULL_FAILED:
                 return None
-            if out.returncode != 0 and pull:
-                print(f"pulling {ref} ...", file=sys.stderr)
-                if subprocess.run(["docker", "pull", "--quiet", ref], stdout=subprocess.DEVNULL,
-                                  timeout=600).returncode != 0:
-                    return None
-                out = subprocess.run(fmt, capture_output=True, text=True, timeout=30)
-            return (json.loads(out.stdout) or {}) if out.returncode == 0 else None
-    except (subprocess.TimeoutExpired, ValueError):
+            if DRY_RUN:
+                if ref not in _DRY_SEEN:
+                    _DRY_SEEN.add(ref)
+                    print(f"dry-run: would run: docker pull {ref}", file=sys.stderr)
+                return None
+            print(f"pulling {ref} ...", file=sys.stderr)
+            if subprocess.run(["docker", "pull", "--quiet", ref], stdout=subprocess.DEVNULL,
+                              timeout=600).returncode != 0:
+                _PULL_FAILED.add(ref)
+                return None
+        out = subprocess.run(["docker", "run", "--rm", "--pull=never", "--entrypoint", "cat", ref, path],
+                             capture_output=True, text=True, timeout=60)
+        return out.stdout if out.returncode == 0 else None
+    except subprocess.TimeoutExpired:
         return None
 
 
-def resolve(version, tag, args, repos, label_tools, warn):
-    """Return ({submodule: (sha, source)}, releng_commit_or_None)."""
+def image_refs(image, tag, registry):
+    # a bare version has no published tag of its own; the suffixed tags are re-tags of one image
+    tags = [tag] if TAG_RE.match(tag) else [f"{tag}-{e}" for e in ("production", "staging", "testing")]
+    return [f"{registry}/eduid/{image}:{t}" for t in tags]
+
+
+def resolve(version, tag, args, repos, use_images, warn):
+    """Return ({submodule: (sha, source)}, releng_commit_or_None); source is "image" or "git"."""
     shas = {}
-    if label_tools:
-        # a bare version has no published tag of its own; the suffixed tags are re-tags of one image
-        tags = [tag] if TAG_RE.match(tag) else [f"{tag}-{e}" for e in ("production", "staging", "testing")]
-        refs = [f"{args.registry}/eduid/{args.image}:{t}" for t in tags]
-        labels = None
-        # local images first, then (only with --pull) the registry
-        for pull in ([False, True] if args.pull else [False]):
-            for ref in refs:
-                for t in label_tools:
-                    labels = labels_for(ref, t, pull)
-                    if labels is not None:
+    if use_images:
+        unreadable = defaultdict(list)
+        for sub, (image, path) in IMAGE_FILES.items():
+            refs = image_refs(image, tag, args.registry)
+            text = None
+            for pull in ([False, True] if args.pull else [False]):  # local images first, then the registry
+                for ref in refs:
+                    text = read_image_file(ref, path, pull)
+                    if text is not None:
                         break
-                if labels is not None:
+                if text is not None:
                     break
-            if labels is not None:
-                break
-        ref = refs[0] if len(refs) == 1 else f"{refs[0].rsplit('-', 1)[0]}-{{production,staging,testing}}"
-        if labels is None:
-            warn(f"could not read labels from {ref} (not pulled locally? use --pull; login needed?)")
-        else:
-            found = {s: labels.get(LABEL_PREFIX + s.removeprefix("eduid-") + "-rev") for s in SUBMODULES}
-            if all(found.values()):
-                shas = {s: (v, "image") for s, v in found.items()}
-            elif any(found.values()):
-                warn(f"image {ref} has only some {LABEL_PREFIX}*-rev labels; ignoring them")
+            m = COMMIT_RE.match(text) if text else None
+            if m:
+                shas[sub] = (m.group(1), "image")
             else:
-                warn(f"image {ref} has no {LABEL_PREFIX}*-rev labels; falling back to git")
+                unreadable[image].append(path)
+        for image, paths in unreadable.items():
+            r = image_refs(image, tag, args.registry)
+            where = r[0] if len(r) == 1 else f"{r[0].rsplit('-', 1)[0]}-{{production,staging,testing}}"
+            warn(f"could not read {', '.join(paths)} from {where} "
+                 f"(not pulled locally? use --pull; login needed? older image without the file?)")
 
     releng_commit = None
-    if not shas:
+    missing = [s for s in SUBMODULES if s not in shas]
+    if missing:
         releng = repos["releng"]
         ts = parse_version(version)
         releng_commit = git(releng, "rev-list", "-1", "--first-parent",
@@ -152,7 +167,7 @@ def resolve(version, tag, args, repos, label_tools, warn):
             if ts - cdate > STALE_AFTER:
                 warn(f"newest eduid-releng commit ({releng_commit[:8]}, {cdate:%Y-%m-%d}) is >1 day older than "
                      f"the build; releng may be stale or the build had no bump (try --fetch)")
-            for s in SUBMODULES:
+            for s in missing:
                 line = git(releng, "ls-tree", releng_commit, f"build/repos/{s}")
                 if line:
                     shas[s] = (line.split()[2], "git")
@@ -195,12 +210,11 @@ def main():
                        help=f"{s} checkout")
     o = ap.add_argument_group("other options")
     o.add_argument("--releng-ref", default=None, help="releng ref to search (default: origin/main, else HEAD)")
-    o.add_argument("--registry", default="platform.sunet.se", help="registry for label lookup (default: %(default)s)")
-    o.add_argument("--image", default="webapp", help="image to read labels from (default: %(default)s)")
+    o.add_argument("--registry", default="platform.sunet.se", help="registry the images are named after (default: %(default)s)")
     o.add_argument("--pull", action="store_true",
-                   help="docker pull images that are not present locally, to read their labels "
+                   help="docker pull images that are not present locally, to read their revision files "
                         "(without it only local images are checked)")
-    o.add_argument("--no-labels", action="store_true", help="skip image label lookup")
+    o.add_argument("--no-images", action="store_true", help="do not read images; derive everything from git")
     o.add_argument("--fetch", action="store_true", help="run git fetch in releng and the source checkouts first (uses each checkout's own remote)")
     o.add_argument("-a", "--all", action="store_true",
                    help="show every version in use per environment (default: only the latest)")
@@ -249,13 +263,12 @@ def main():
     if args.releng_ref is None:
         args.releng_ref = "origin/main" if git(repos["releng"], "rev-parse", "--verify", "-q", "origin/main") else "HEAD"
 
-    label_tools = []
-    if not args.no_labels:
+    use_images = False
+    if not args.no_images:
         if shutil.which("docker"):
-            label_tools = ["docker"]
-        else:
-            if not args.quiet:
-                print("note: docker not found; skipping image label lookup", file=sys.stderr)
+            use_images = True
+        elif not args.quiet:
+            print("note: docker not found; deriving everything from git", file=sys.stderr)
 
     wanted = args.what or ["staging", "production"]
     jobs = []  # (title, {version: (tag, [services])}, header)
@@ -314,11 +327,17 @@ def main():
             if svcs and (args.verbose or len(svcs) <= 12):
                 print("    services: " + ", ".join(svcs))
             warnings = []
-            shas, rc = resolve(version, tag, args, repos, label_tools, warnings.append)
-            if shas and all(v[1] == "image" for v in shas.values()):
-                how = "read from image labels"
-            elif label_tools:
-                how = "derived from git only (image not read: no labels or image unavailable)"
+            shas, rc = resolve(version, tag, args, repos, use_images, warnings.append)
+            from_img = [x for x in SUBMODULES if shas.get(x, (None, None))[1] == "image"]
+            from_git = [x for x in SUBMODULES if x in shas and x not in from_img]
+            used_images = sorted({IMAGE_FILES[x][0] for x in from_img})
+            if from_img and not from_git:
+                how = f"read from the images ({', '.join(used_images)})"
+            elif from_img:
+                how = (f"mixed: {', '.join(from_img)} read from the images ({', '.join(used_images)}); "
+                       f"{', '.join(from_git)} derived from git")
+            elif use_images:
+                how = "derived from git only (images not read: not available locally or no revision file)"
             else:
                 how = "derived from git only (image lookup disabled)"
             print(f"    source: {how}")

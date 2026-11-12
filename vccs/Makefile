@@ -1,12 +1,10 @@
-include ../labels.mk
-
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/vccs
 
 docker:
 	test -n '$(VERSION)' || exit 1
 	test -n '$(LUNA_IMAGE_VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" $(LABEL_ARGS) --build-arg "LUNA_IMAGE_VERSION=$(LUNA_IMAGE_VERSION)" --tag "eduid-vccs:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --build-arg "LUNA_IMAGE_VERSION=$(LUNA_IMAGE_VERSION)" --tag "eduid-vccs:$(VERSION)" .
 	docker tag "eduid-vccs:$(VERSION)" "eduid-vccs:latest"
 
 docker_tagpush:

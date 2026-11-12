@@ -1,11 +1,9 @@
-include ../labels.mk
-
 REGISTRY?=	platform.sunet.se
 DOCKERIMAGE?=	$(REGISTRY)/eduid/admintools
 
 docker:
 	test -n '$(VERSION)' || exit 1
-	docker build --build-arg "VERSION=$(VERSION)" $(LABEL_ARGS) --tag "eduid-admintools:$(VERSION)" .
+	docker build --build-arg "VERSION=$(VERSION)" --tag "eduid-admintools:$(VERSION)" .
 	docker tag "eduid-admintools:$(VERSION)" "eduid-admintools:latest"
 
 docker_tagpush:
