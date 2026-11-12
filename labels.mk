@@ -11,12 +11,18 @@
 # submodules have moved. If eduid-build:$(VERSION) does not exist, or a
 # submodule was not initialised when it was built, that label is omitted.
 
-BUILD_IMAGE := eduid-build:$(VERSION)
+BUILD_IMAGE = eduid-build:$(VERSION)
 
-# "eduid-backend=<sha> eduid-front=<sha> ..." from the build image
-BUILD_REVS := $(shell test -n '$(VERSION)' && \
-	docker run --rm --entrypoint cat $(BUILD_IMAGE) /build/submodules.txt 2>/dev/null \
-	| awk '!/^-/ { sub(/^[ +U]/, ""); n = $$2; sub(/^build\/repos\//, "", n); print n "=" $$1 }')
+# "eduid-backend=<sha> eduid-front=<sha> ..." from the build image.
+#
+# Lazy and cached: nothing runs when the Makefile is merely parsed (so the
+# promotion targets, which never use LABEL_ARGS, do not touch docker), and the
+# lookup runs once, the first time it is expanded in a build recipe. The image
+# must already exist locally; `docker run` alone would try to pull it.
+BUILD_REVS = $(eval BUILD_REVS := $(shell test -n '$(VERSION)' && \
+	docker image inspect $(BUILD_IMAGE) >/dev/null 2>&1 && \
+	docker run --rm --pull=never --entrypoint cat $(BUILD_IMAGE) /build/submodules.txt 2>/dev/null \
+	| awk '!/^-/ { sub(/^[ +U]/, ""); n = $$2; sub(/^build\/repos\//, "", n); print n "=" $$1 }'))$(BUILD_REVS)
 
 LABEL_REPOS := eduid-backend eduid-front eduid-html eduid-managed-accounts
 
