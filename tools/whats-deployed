@@ -224,7 +224,7 @@ def main():
     missing = {k: p for k, p in repos.items() if not is_repo(p)}
     for k, p in missing.items():
         if not args.quiet:
-            print(f"warning: no git checkout for {k} at {p}; use --{k.replace('_', '-')} PATH", file=sys.stderr)
+            print(f"warning: no git checkout for {k} at {p}; use --{k.removeprefix('eduid-').replace('_', '-')} PATH", file=sys.stderr)
     if "releng" in missing:
         sys.exit("error: eduid-releng checkout is required")
     repos = {k: (None if k in missing else p) for k, p in repos.items()}
